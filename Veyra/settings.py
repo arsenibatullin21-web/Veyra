@@ -41,15 +41,15 @@ BASE_APPS = [
     'django.contrib.staticfiles',
 ]
 
-PROJECT_APS = [
-
+PROJECT_APPS = [
+    'users.apps.UsersConfig'
 ]
 
 THIRD_WAY_APPS = [
 
 ]
 
-INSTALLED_APPS =  BASE_APPS + PROJECT_APS + THIRD_WAY_APPS
+INSTALLED_APPS =  BASE_APPS + PROJECT_APPS + THIRD_WAY_APPS
 
 
 MIDDLEWARE = [
@@ -139,7 +139,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# AUTH_USER_MODEL = 'user.User'
+AUTH_USER_MODEL = 'users.User'
 LOGIN_URL = 'user:login'
 
 # Email
