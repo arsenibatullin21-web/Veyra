@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Log In - Veyra{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'users/users.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="register-page login-page">
+    <div class="register-hero login-hero" aria-label="Veyra wardrobe preview">
+        <div class="register-hero-content">
+            <div>
+                <p class="register-kicker">Welcome back</p>
+                <h1>Return to your Veyra wardrobe.</h1>
+            </div>
+            <p>
+                Sign in to continue shopping, review your future orders, and keep your profile ready for a faster checkout.
+            </p>
+            <div class="register-perks login-perks" aria-label="Account features">
+                <article>
+                    <strong>Saved profile</strong>
+                    <span>Your details stay ready.</span>
+                </article>
+                <article>
+                    <strong>Order updates</strong>
+                    <span>Track every purchase.</span>
+                </article>
+                <article>
+                    <strong>Member access</strong>
+                    <span>Manage your Veyra account.</span>
+                </article>
+            </div>
+        </div>
+    </div>
+
+    <div class="register-panel login-panel">
+        <div class="register-panel-header">
+            <p class="register-kicker">Account access</p>
+            <h2>Log in</h2>
+            <p>Enter your account details to continue.</p>
+        </div>
+
+        <form method="post" class="register-form login-form" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <ul class="form-error-list">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <div class="field-group">
+                <label for="{{ form.username.id_for_label }}">Username or email</label>
+                {{ form.username }}
+                {% for error in form.username.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="field-group">
+                <div class="field-label-row">
+                    <label for="{{ form.password.id_for_label }}">Password</label>
+                    <a href="#" aria-disabled="true">Forgot password?</a>
+                </div>
+                {{ form.password }}
+                {% for error in form.password.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+
+            <button type="submit" class="register-submit">Log in</button>
+        </form>
+
+        <p class="register-login-note">
+            New to Veyra?
+            <a href="{% url 'users:register' %}">Create account</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

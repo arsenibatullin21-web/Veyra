@@ -46,11 +46,18 @@ PROJECT_APPS = [
 ]
 
 THIRD_WAY_APPS = [
-
+    'rest_framework',
+    'rest_framework_simplejwt.token_blacklist'
 ]
 
 INSTALLED_APPS =  BASE_APPS + PROJECT_APPS + THIRD_WAY_APPS
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -140,7 +147,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTH_USER_MODEL = 'users.User'
-LOGIN_URL = 'user:login'
+LOGIN_URL = 'users:login'
+LOGOUT_REDIRECT_URL = 'users:login'
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration

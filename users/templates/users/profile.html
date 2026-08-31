@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Profile - Veyra{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'users/users.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="profile-page" data-profile-page data-editing="{{ is_editing|yesno:'true,false' }}" data-password-editing="{{ is_password_editing|yesno:'true,false' }}">
+    <header class="profile-header">
+        <div class="profile-identity">
+            {% if profile_user.avatar %}
+                <img src="{{ profile_user.avatar.url }}" alt="{{ profile_user.username }} avatar" class="profile-avatar">
+            {% else %}
+                <div class="profile-avatar profile-avatar-fallback" aria-hidden="true">
+                    {{ profile_user.username|default:profile_user.email|slice:":1"|capfirst }}
+                </div>
+            {% endif %}
+
+            <div>
+                <p class="register-kicker">Veyra profile</p>
+                <h1>{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+                <p>{{ profile_user.email }}</p>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <button type="button" class="profile-secondary-action" data-profile-edit-button>Edit profile</button>
+            <button type="button" class="profile-primary-action" data-password-edit-button>Change password</button>
+        </div>
+    </header>
+
+    <div class="profile-layout">
+        <main class="profile-main">
+            <section class="profile-card profile-overview" aria-labelledby="profile-overview-heading">
+                <div class="profile-section-heading">
+                    <div>
+                        <p class="register-kicker">Personal data</p>
+                        <h2 id="profile-overview-heading">Account details</h2>
+                    </div>
+                    <span>Joined {{ profile_user.date_joined|date:"F j, Y" }}</span>
+                </div>
+
+                <dl class="profile-info-grid">
+                    <div>
+                        <dt>Username</dt>
+                        <dd>{{ profile_user.username|default:"Not set" }}</dd>
+                    </div>
+                    <div>
+                        <dt>Email</dt>
+                        <dd>{{ profile_user.email }}</dd>
+                    </div>
+                    <div>
+                        <dt>First name</dt>
+                        <dd>{{ profile_user.first_name|default:"Not set" }}</dd>
+                    </div>
+                    <div>
+                        <dt>Last name</dt>
+                        <dd>{{ profile_user.last_name|default:"Not set" }}</dd>
+                    </div>
+                    <div>
+                        <dt>Phone</dt>
+                        <dd>{{ profile_user.phone|default:"Not set" }}</dd>
+                    </div>
+                    <div>
+                        <dt>City</dt>
+                        <dd>{{ profile_user.city|default:"Not set" }}</dd>
+                    </div>
+                    <div class="profile-info-wide">
+                        <dt>Address</dt>
+                        <dd>{{ profile_user.address|default:"Not set" }}</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="profile-card profile-edit-panel {% if is_editing %}is-open{% endif %}" data-profile-edit-panel aria-labelledby="profile-edit-heading">
+                <div class="profile-section-heading">
+                    <div>
+                        <p class="register-kicker">Edit mode</p>
+                        <h2 id="profile-edit-heading">Update personal data</h2>
+                    </div>
+                    <button type="button" class="profile-close-button" data-profile-close-button>Close</button>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="profile-form">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <ul class="form-error-list">
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <div class="profile-form-grid">
+                        <div class="field-group">
+                            <label for="{{ form.first_name.id_for_label }}">First name</label>
+                            {{ form.first_name }}
+                            {% for error in form.first_name.errors %}
+                                <p class="field-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field-group">
+                            <label for="{{ form.last_name.id_for_label }}">Last name</label>
+                            {{ form.last_name }}
+                            {% for error in form.last_name.errors %}
+                                <p class="field-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field-group">
+                            <label for="{{ form.phone.id_for_label }}">Phone</label>
+                            {{ form.phone }}
+                            {% for error in form.phone.errors %}
+                                <p class="field-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field-group">
+                            <label for="{{ form.city.id_for_label }}">City</label>
+                            {{ form.city }}
+                            {% for error in form.city.errors %}
+                                <p class="field-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field-group profile-form-wide">
+                            <label for="{{ form.address.id_for_label }}">Address</label>
+                            {{ form.address }}
+                            {% for error in form.address.errors %}
+                                <p class="field-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field-group profile-form-wide">
+                            <label for="{{ form.avatar.id_for_label }}">Avatar</label>
+                            {{ form.avatar }}
+                            {% for error in form.avatar.errors %}
+                                <p class="field-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="profile-form-actions">
+                        <button type="button" class="profile-secondary-action" data-profile-cancel-button>Cancel</button>
+                        <button type="submit" name="form_type" value="profile" class="profile-primary-action">Save changes</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="profile-card profile-password-panel {% if is_password_editing %}is-open{% endif %}" data-password-edit-panel aria-labelledby="profile-password-heading">
+                <div class="profile-section-heading">
+                    <div>
+                        <p class="register-kicker">Security</p>
+                        <h2 id="profile-password-heading">Change password</h2>
+                    </div>
+                    <button type="button" class="profile-close-button" data-password-close-button>Close</button>
+                </div>
+
+                <form method="post" class="profile-form">
+                    {% csrf_token %}
+
+                    {% if password_form.non_field_errors %}
+                        <ul class="form-error-list">
+                            {% for error in password_form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <div class="profile-form-grid">
+                        <div class="field-group profile-form-wide">
+                            <label for="{{ password_form.old_password.id_for_label }}">Current password</label>
+                            {{ password_form.old_password }}
+                            {% for error in password_form.old_password.errors %}
+                                <p class="field-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field-group">
+                            <label for="{{ password_form.new_password1.id_for_label }}">New password</label>
+                            {{ password_form.new_password1 }}
+                            {% for error in password_form.new_password1.errors %}
+                                <p class="field-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field-group">
+                            <label for="{{ password_form.new_password2.id_for_label }}">Confirm new password</label>
+                            {{ password_form.new_password2 }}
+                            {% for error in password_form.new_password2.errors %}
+                                <p class="field-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="profile-form-actions">
+                        <button type="button" class="profile-secondary-action" data-password-cancel-button>Cancel</button>
+                        <button type="submit" name="form_type" value="password" class="profile-primary-action">Update password</button>
+                    </div>
+                </form>
+            </section>
+        </main>
+
+        <aside class="profile-sidebar">
+            <section class="profile-card profile-summary-card">
+                <p class="register-kicker">Shopping</p>
+                <h2>Account summary</h2>
+                <dl>
+                    <div>
+                        <dt>Orders</dt>
+                        <dd>0</dd>
+                    </div>
+                    <div>
+                        <dt>Unread notifications</dt>
+                        <dd>0</dd>
+                    </div>
+                    <div>
+                        <dt>Saved address</dt>
+                        <dd>{% if profile_user.address %}Ready{% else %}Missing{% endif %}</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="profile-card profile-note-card">
+                <p class="register-kicker">Next step</p>
+                <h2>Complete checkout details</h2>
+                <p>Add your phone, city, and address now so order checkout feels quick later.</p>
+            </section>
+        </aside>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'users/profile.js' %}"></script>
+{% endblock %}

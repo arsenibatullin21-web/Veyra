@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Create Account - Veyra{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'users/users.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="register-page">
+    <div class="register-hero" aria-label="Veyra brand preview">
+        <div class="register-hero-content">
+            <div>
+                <p class="register-kicker">Veyra account</p>
+                <h1>Build your everyday wardrobe with calm precision.</h1>
+            </div>
+            <p>
+                Create an account to save your profile details, track future orders, and receive clean updates about your purchases.
+            </p>
+            <div class="register-perks" aria-label="Account benefits">
+                <article>
+                    <strong>Fast checkout</strong>
+                    <span>Keep delivery details ready.</span>
+                </article>
+                <article>
+                    <strong>Order history</strong>
+                    <span>Follow every purchase.</span>
+                </article>
+                <article>
+                    <strong>Notifications</strong>
+                    <span>Get updates from Veyra.</span>
+                </article>
+            </div>
+        </div>
+    </div>
+
+    <div class="register-panel">
+        <div class="register-panel-header">
+            <p class="register-kicker">Start here</p>
+            <h2>Create account</h2>
+            <p>Use your details to join Veyra and manage your shopping profile.</p>
+        </div>
+
+        <form method="post" class="register-form" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <ul class="form-error-list">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if form.username %}
+                <div class="field-group">
+                    <label for="{{ form.username.id_for_label }}">Username</label>
+                    {{ form.username }}
+                    {% if form.username.help_text %}
+                        <p class="field-help">{{ form.username.help_text }}</p>
+                    {% endif %}
+                    {% for error in form.username.errors %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="field-group">
+                <label for="{{ form.email.id_for_label }}">Email</label>
+                {{ form.email }}
+                {% if form.email.help_text %}
+                    <p class="field-help">{{ form.email.help_text }}</p>
+                {% endif %}
+                {% for error in form.email.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="field-group">
+                <label for="{{ form.password1.id_for_label }}">Password</label>
+                {{ form.password1 }}
+                {% if form.password1.help_text %}
+                    <p class="field-help">{{ form.password1.help_text }}</p>
+                {% endif %}
+                {% for error in form.password1.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="field-group">
+                <label for="{{ form.password2.id_for_label }}">Confirm password</label>
+                {{ form.password2 }}
+                {% if form.password2.help_text %}
+                    <p class="field-help">{{ form.password2.help_text }}</p>
+                {% endif %}
+                {% for error in form.password2.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="register-submit">Create account</button>
+        </form>
+
+        <p class="register-login-note">
+            Already have an account?
+            <a href="{% url 'users:login' %}">Log in</a>
+        </p>
+    </div>
+</section>
+{% endblock %}
