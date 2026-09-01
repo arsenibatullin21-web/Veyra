@@ -1,14 +1,20 @@
-from idlelib.rpc import request_queue
-
-from django.contrib.auth import get_user_model, update_session_auth_hash
+from django.contrib.auth import get_user_model, update_session_auth_hash, login
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LoginView, PasswordChangeView
+from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.shortcuts import redirect, render
+from django.template.context_processors import request
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, UpdateView
+from rest_framework import generics, permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_200_OK
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.forms import UserRegisterForm, UserLoginForm, UserProfileEditForm, UserPasswordChangeForm
+from users.serializers import UserRegisterSerializer, UserProfileSerializer, UserLoginSerializer, \
+    UserProfileEditSerializer, ChangePasswordSerializer
 
 
 # Create your views here.
@@ -86,9 +92,99 @@ class UserProfileView(LoginRequiredMixin, DetailView):
 
 
 
-class UserPasswordChange(LoginRequiredMixin, PasswordChangeView):
-    form_class = UserPasswordChangeForm
-    template_name = 'users/password_change.html'
+class UserRegisterAPIView(generics.CreateAPIView):
+    model = get_user_model()
+    serializer_class = UserRegisterSerializer
+    permission_classes = [permissions.AllowAny, ]
 
-    def get_success_url(self):
-        return reverse_lazy('users:profile')
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.save()
+
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                'user': UserProfileSerializer(user).data,
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'message': 'You registered in successfully.'
+            }, status=HTTP_201_CREATED)
+        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+
+class UserLoginAPIView(generics.GenericAPIView):
+    model = get_user_model()
+    serializer_class = UserLoginSerializer
+    permission_classes = [permissions.AllowAny, ]
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.validated_data.get('user')
+            login(request, user=user)
+
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                'user': UserProfileSerializer(user).data,
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'message': "You logged in successfully."
+            }, status=HTTP_200_OK)
+        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+class UserProfileAPIView(generics.RetrieveUpdateAPIView):
+    model = get_user_model()
+    permission_classes = [permissions.IsAuthenticated, ]
+
+    def get_object(self):
+        return self.request.user
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return UserProfileEditSerializer
+        return UserProfileSerializer
+
+class ChangePasswordAPIView(generics.UpdateAPIView):
+    model = get_user_model()
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [permissions.IsAuthenticated, ]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.get('partial', False)
+        serializer = self.get_serializer(instance=self.get_object(), data=request.data, partial=partial)
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+            return Response({
+                "user": str(self.get_object().username),
+                "message": "Password was changed successfully."
+            }, status=HTTP_200_OK)
+
+        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated, ])
+def logout_view(request):
+    try:
+        refresh = request.data.get('refresh_token')
+        if refresh:
+            token = RefreshToken(refresh)
+            token.blacklist()
+            return Response({
+                'user': str(request.user.username),
+                'message': "You logged out successfully."
+            }, status=HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            'error': 'Something went wrong.'
+        }, status=HTTP_400_BAD_REQUEST)
+
