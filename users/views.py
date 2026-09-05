@@ -33,7 +33,7 @@ class UserLoginView(LoginView):
     template_name = 'users/login.html'
 
     def get_success_url(self):
-        return reverse_lazy('users:profile')
+        return self.get_redirect_url() or reverse_lazy('users:profile')
 
 class UserProfileView(LoginRequiredMixin, DetailView):
     model = get_user_model()

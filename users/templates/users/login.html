@@ -45,6 +45,9 @@
         <form method="post" class="register-form login-form" novalidate>
             {% csrf_token %}
 
+            {% if request.GET.next %}
+                 <input type="hidden" name="next" value="{{ request.GET.next }}">
+            {% endif %}
             {% if form.non_field_errors %}
                 <ul class="form-error-list">
                     {% for error in form.non_field_errors %}

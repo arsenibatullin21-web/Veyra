@@ -1,0 +1,409 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Product - Veyra{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'products/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="product-create-page">
+    <section class="product-create-container product-create-shell">
+        <div class="product-create-head">
+            <div>
+                <p class="section-kicker">Admin catalog</p>
+                <h1>Create product</h1>
+                <p>
+                    Add one color product, then create its size variants with price, stock, SKU, and variant image.
+                </p>
+            </div>
+            <a href="{% url 'products:catalog' %}" class="product-create-back">Back to catalog</a>
+        </div>
+
+        <form class="product-create-form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="product-form-alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            {% if variant_form.non_form_errors %}
+                <div class="product-form-alert">
+                    {{ variant_form.non_form_errors }}
+                </div>
+            {% endif %}
+
+            {% if image_form.non_form_errors %}
+                <div class="product-form-alert">
+                    {{ image_form.non_form_errors }}
+                </div>
+            {% endif %}
+
+            <section class="product-create-grid">
+                <div class="product-create-panel">
+                    <div class="product-panel-head">
+                        <span>01</span>
+                        <div>
+                            <h2>Product information</h2>
+                            <p>This is the visible catalog card and detail page data.</p>
+                        </div>
+                    </div>
+
+                    <div class="product-field-grid">
+                        <div class="product-field wide">
+                            <label for="{{ form.name.id_for_label }}">Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="field-errors">{{ form.name.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="product-field">
+                            <label for="{{ form.group_code.id_for_label }}">Group code</label>
+                            {{ form.group_code }}
+                            {% if form.group_code.errors %}<div class="field-errors">{{ form.group_code.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="product-field">
+                            <label for="{{ form.category.id_for_label }}">Category</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}<div class="field-errors">{{ form.category.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="product-field">
+                            <label for="{{ form.color.id_for_label }}">Color</label>
+                            {{ form.color }}
+                            {% if form.color.errors %}<div class="field-errors">{{ form.color.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="product-field wide">
+                            <label for="{{ form.short_description.id_for_label }}">Short description</label>
+                            {{ form.short_description }}
+                            {% if form.short_description.errors %}<div class="field-errors">{{ form.short_description.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="product-field wide">
+                            <label for="{{ form.description.id_for_label }}">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}<div class="field-errors">{{ form.description.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="product-field wide">
+                            <label for="{{ form.main_image.id_for_label }}">Main image</label>
+                            <div class="product-file-field">
+                                {{ form.main_image }}
+                            </div>
+                            {% if form.main_image.errors %}<div class="field-errors">{{ form.main_image.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="product-create-tips">
+                    <h2>How to use colors</h2>
+                    <p>
+                        If this product is one color of a bigger item, use the same group code for every color.
+                    </p>
+                    <div>
+                        <span>Example</span>
+                        <strong>jogger-qrc</strong>
+                    </div>
+                    <p>
+                        Then detail page can show Green, Navy, and Stone as related color options.
+                    </p>
+                </aside>
+            </section>
+
+            <section class="product-create-panel product-images-panel">
+                <div class="product-panel-head">
+                    <span>02</span>
+                    <div>
+                        <h2>Gallery images</h2>
+                        <p>Add extra photos for this product color. These images will appear as thumbnails on detail page.</p>
+                    </div>
+                </div>
+
+                {{ image_form.management_form }}
+
+                <div class="image-form-list" data-image-form-list>
+                    {% for image in image_form %}
+                        <article class="image-form-card">
+                            {% for hidden in image.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+
+                            <div class="image-card-preview" aria-hidden="true">
+                                <span>Image</span>
+                            </div>
+
+                            <div class="image-card-body">
+                                <div class="variant-card-head">
+                                    <strong>Gallery image {{ forloop.counter }}</strong>
+                                    {% if image.DELETE %}
+                                        <label class="variant-delete">
+                                            {{ image.DELETE }}
+                                            <span>Delete</span>
+                                        </label>
+                                    {% endif %}
+                                </div>
+
+                                {% if image.non_field_errors %}
+                                    <div class="field-errors">{{ image.non_field_errors }}</div>
+                                {% endif %}
+
+                                <div class="product-field">
+                                    <label for="{{ image.image.id_for_label }}">Image file</label>
+                                    <div class="product-file-field">
+                                        {{ image.image }}
+                                    </div>
+                                    {% if image.image.errors %}<div class="field-errors">{{ image.image.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+
+                <template data-empty-image-form>
+                    <article class="image-form-card">
+                        {% for hidden in image_form.empty_form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+
+                        <div class="image-card-preview" aria-hidden="true">
+                            <span>Image</span>
+                        </div>
+
+                        <div class="image-card-body">
+                            <div class="variant-card-head">
+                                <strong>Gallery image __number__</strong>
+                                {% if image_form.empty_form.DELETE %}
+                                    <label class="variant-delete">
+                                        {{ image_form.empty_form.DELETE }}
+                                        <span>Delete</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+
+                            <div class="product-field">
+                                <label for="{{ image_form.empty_form.image.id_for_label }}">Image file</label>
+                                <div class="product-file-field">
+                                    {{ image_form.empty_form.image }}
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </template>
+
+                <button type="button" class="add-variant-button" data-add-image>
+                    Add gallery image
+                </button>
+            </section>
+
+            <section class="product-create-panel variants-panel">
+                <div class="product-panel-head">
+                    <span>03</span>
+                    <div>
+                        <h2>Size variants</h2>
+                        <p>Each row is one sellable item: size, price, stock, and SKU.</p>
+                    </div>
+                </div>
+
+                {{ variant_form.management_form }}
+
+                <div class="variant-form-list" data-variant-form-list>
+                    {% for variant in variant_form %}
+                        <article class="variant-form-card">
+                            {% for hidden in variant.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+
+                            <div class="variant-card-head">
+                                <strong>Variant {{ forloop.counter }}</strong>
+                                {% if variant.DELETE %}
+                                    <label class="variant-delete">
+                                        {{ variant.DELETE }}
+                                        <span>Delete</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+
+                            {% if variant.non_field_errors %}
+                                <div class="field-errors">{{ variant.non_field_errors }}</div>
+                            {% endif %}
+
+                            <div class="variant-field-grid">
+                                <div class="product-field">
+                                    <label for="{{ variant.sku.id_for_label }}">SKU</label>
+                                    {{ variant.sku }}
+                                    {% if variant.sku.errors %}<div class="field-errors">{{ variant.sku.errors }}</div>{% endif %}
+                                </div>
+
+                                <div class="product-field">
+                                    <label for="{{ variant.price.id_for_label }}">Price</label>
+                                    {{ variant.price }}
+                                    {% if variant.price.errors %}<div class="field-errors">{{ variant.price.errors }}</div>{% endif %}
+                                </div>
+
+                                <div class="product-field">
+                                    <label for="{{ variant.discount.id_for_label }}">Discount</label>
+                                    {{ variant.discount }}
+                                    {% if variant.discount.errors %}<div class="field-errors">{{ variant.discount.errors }}</div>{% endif %}
+                                </div>
+
+                                <div class="product-field">
+                                    <label for="{{ variant.size.id_for_label }}">Size</label>
+                                    {{ variant.size }}
+                                    {% if variant.size.errors %}<div class="field-errors">{{ variant.size.errors }}</div>{% endif %}
+                                </div>
+
+                                <div class="product-field">
+                                    <label for="{{ variant.stock.id_for_label }}">Stock</label>
+                                    {{ variant.stock }}
+                                    {% if variant.stock.errors %}<div class="field-errors">{{ variant.stock.errors }}</div>{% endif %}
+                                </div>
+
+                                <div class="product-field">
+                                    <label for="{{ variant.main_image.id_for_label }}">Variant image</label>
+                                    <div class="product-file-field">
+                                        {{ variant.main_image }}
+                                    </div>
+                                    {% if variant.main_image.errors %}<div class="field-errors">{{ variant.main_image.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+
+                <template data-empty-variant-form>
+                    <article class="variant-form-card">
+                        {% for hidden in variant_form.empty_form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+
+                        <div class="variant-card-head">
+                            <strong>Variant __number__</strong>
+                            {% if variant_form.empty_form.DELETE %}
+                                <label class="variant-delete">
+                                    {{ variant_form.empty_form.DELETE }}
+                                    <span>Delete</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <div class="variant-field-grid">
+                            <div class="product-field">
+                                <label for="{{ variant_form.empty_form.sku.id_for_label }}">SKU</label>
+                                {{ variant_form.empty_form.sku }}
+                            </div>
+
+                            <div class="product-field">
+                                <label for="{{ variant_form.empty_form.price.id_for_label }}">Price</label>
+                                {{ variant_form.empty_form.price }}
+                            </div>
+
+                            <div class="product-field">
+                                <label for="{{ variant_form.empty_form.discount.id_for_label }}">Discount</label>
+                                {{ variant_form.empty_form.discount }}
+                            </div>
+
+                            <div class="product-field">
+                                <label for="{{ variant_form.empty_form.size.id_for_label }}">Size</label>
+                                {{ variant_form.empty_form.size }}
+                            </div>
+
+                            <div class="product-field">
+                                <label for="{{ variant_form.empty_form.stock.id_for_label }}">Stock</label>
+                                {{ variant_form.empty_form.stock }}
+                            </div>
+
+                            <div class="product-field">
+                                <label for="{{ variant_form.empty_form.main_image.id_for_label }}">Variant image</label>
+                                <div class="product-file-field">
+                                    {{ variant_form.empty_form.main_image }}
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </template>
+
+                <button type="button" class="add-variant-button" data-add-variant>
+                    Add variant row
+                </button>
+            </section>
+
+            <div class="product-create-actions">
+                <a href="{% url 'products:catalog' %}">Cancel</a>
+                <button type="submit">Create product</button>
+            </div>
+        </form>
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('click', function (event) {
+        const addButton = event.target.closest('[data-add-variant]');
+
+        if (!addButton) {
+            return;
+        }
+
+        const list = document.querySelector('[data-variant-form-list]');
+        const template = document.querySelector('[data-empty-variant-form]');
+        const totalForms = document.querySelector('[name="variants-TOTAL_FORMS"]');
+        const formIndex = Number(totalForms.value);
+        const nextNumber = formIndex + 1;
+
+        const html = template.innerHTML
+            .replaceAll('__prefix__', formIndex)
+            .replaceAll('__number__', nextNumber);
+
+        list.insertAdjacentHTML('beforeend', html);
+        totalForms.value = nextNumber;
+    });
+
+    document.addEventListener('click', function (event) {
+        const addButton = event.target.closest('[data-add-image]');
+
+        if (!addButton) {
+            return;
+        }
+
+        const list = document.querySelector('[data-image-form-list]');
+        const template = document.querySelector('[data-empty-image-form]');
+        const totalForms = document.querySelector('[name="images-TOTAL_FORMS"]');
+        const formIndex = Number(totalForms.value);
+        const nextNumber = formIndex + 1;
+
+        const html = template.innerHTML
+            .replaceAll('__prefix__', formIndex)
+            .replaceAll('__number__', nextNumber);
+
+        list.insertAdjacentHTML('beforeend', html);
+        totalForms.value = nextNumber;
+    });
+
+    document.addEventListener('change', function (event) {
+        const deleteInput = event.target.closest('.variant-delete input[type="checkbox"]');
+
+        if (!deleteInput || !deleteInput.checked) {
+            return;
+        }
+
+        const card = deleteInput.closest('.variant-form-card, .image-form-card');
+
+        if (card) {
+            card.querySelectorAll('input, select, textarea').forEach(function (field) {
+                if (field === deleteInput || field.type === 'hidden') {
+                    return;
+                }
+
+                field.required = false;
+                field.disabled = true;
+            });
+            card.classList.add('formset-card-hidden');
+        }
+    });
+</script>
+{% endblock %}

@@ -148,9 +148,18 @@
                         </div>
 
                         <div class="product-actions">
-                            <button type="submit" class="product-add-button">Add to cart</button>
+                            {% if user.is_authenticated %}
+                                <button type="submit" class="product-add-button">Add to cart</button>
+                            {% else %}
+                                <a class="product-add-button" href="{% url 'users:login' %}?next={{ request.path }}">Add to cart</a>
+                            {% endif %}
                             <button type="button" class="product-save-button">Save</button>
                         </div>
+                        {% if request.user.is_staff %}
+                            <div class="product-admin-actions">
+                                <a href="{% url 'products:update' product.slug %}">Edit product</a>
+                            </div>
+                        {% endif %}
                     </form>
                 {% endwith %}
 

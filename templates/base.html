@@ -91,6 +91,10 @@
             gap: 6px;
         }
 
+        .nav-dropdown {
+            position: relative;
+        }
+
         .site-nav a {
             padding: 10px 12px;
             border-radius: var(--radius);
@@ -102,6 +106,68 @@
         .site-nav a:hover {
             color: var(--ink);
             background: #f3f4f6;
+        }
+
+        .nav-dropdown-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-dropdown-trigger::after {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-right: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: translateY(-2px) rotate(45deg);
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            width: 220px;
+            display: grid;
+            gap: 4px;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: #ffffff;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(6px);
+            transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
+        }
+
+        .nav-dropdown-menu::before {
+            content: "";
+            position: absolute;
+            right: 0;
+            bottom: 100%;
+            left: 0;
+            height: 10px;
+        }
+
+        .nav-dropdown:hover .nav-dropdown-menu,
+        .nav-dropdown:focus-within .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .site-nav .nav-dropdown-menu a {
+            display: grid;
+            gap: 2px;
+            padding: 10px;
+            color: var(--ink);
+        }
+
+        .site-nav .nav-dropdown-menu a span {
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 650;
         }
 
         .header-actions {
@@ -237,6 +303,24 @@
                 flex-wrap: wrap;
             }
 
+            .nav-dropdown {
+                width: 100%;
+            }
+
+            .nav-dropdown-trigger {
+                width: 100%;
+            }
+
+            .nav-dropdown-menu {
+                position: static;
+                width: 100%;
+                margin-top: 6px;
+                box-shadow: none;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+            }
+
             .header-actions .nav-button {
                 flex: 1;
             }
@@ -263,6 +347,29 @@
                 {% if request.user.is_authenticated %}
                     <a href="/orders/">Orders</a>
                     <a href="/notifications/">Notifications</a>
+                {% endif %}
+                {% if request.user.is_staff %}
+                    <div class="nav-dropdown">
+                        <a href="/admin/" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Manage</a>
+                        <div class="nav-dropdown-menu" aria-label="Manage menu">
+                            <a href="{% url 'products:create' %}">
+                                Create product
+                                <span>Add product with variants</span>
+                            </a>
+                            <a href="/admin/products/product/">
+                                Manage products
+                                <span>View, edit, delete products</span>
+                            </a>
+                            <a href="/admin/products/productvariant/">
+                                Manage variants
+                                <span>Prices, sizes, stock</span>
+                            </a>
+                            <a href="/admin/products/category/">
+                                Manage categories
+                                <span>Catalog sections</span>
+                            </a>
+                        </div>
+                    </div>
                 {% endif %}
             </nav>
 
