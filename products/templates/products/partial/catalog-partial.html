@@ -1,0 +1,82 @@
+ <section class="catalog-container catalog-layout filters-open" data-catalog-layout>
+        <section class="catalog-content">
+            <form
+                        action="{% url 'products:catalog' %}"
+                        method="get"
+                        hx-get="{% url 'products:catalog' %}"
+                        hx-target="#catalog-shell"
+                        hx-push-url="true"
+                        hx-trigger="change"
+                        hx-swap="innerHTML show:none"
+                >
+            <div class="catalog-toolbar">
+                <div>
+                    <p class="catalog-count">Showing {{ products.count }} products</p>
+                    <h2>Current collection</h2>
+                </div>
+                <div class="catalog-controls">
+                    <label>
+                        Sort
+                        <select name="sort">
+                            <option value="base" {% if selected_sort == 'base' %}selected{% endif %}>Recommended</option>
+                            <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest</option>
+                            <option value="low-to-high" {% if selected_sort == 'low-to-high' %}selected{% endif %}>Price: low to high</option>
+                            <option value="high-to-low" {% if selected_sort == 'high-to-low' %}selected{% endif %}>Price: high to low</option>
+                        </select>
+                    </label>
+                    <button type="button" class="mobile-filter-button" data-filter-toggle aria-expanded="true">
+                        Hide filters
+                    </button>
+                </div>
+            </div>
+
+            <aside class="catalog-filter-panel" aria-label="Catalog filters">
+                    <div class="filter-head">
+                        <h2>Filters</h2>
+                        <a href="{% url 'products:catalog' %}"
+                           hx-get="{% url 'products:catalog' %}"
+                           hx-target="#catalog-shell"
+                           hx-push-url="true"
+                           hx-swap="innerHTML show:none">Reset</a>
+                    </div>
+
+                    <div class="catalog-filter-grid">
+                        <div class="filter-group">
+                            <h3>Category</h3>
+                            {% for category in categories %}
+                                <label><input type="checkbox" name="category" value="{{ category.slug }}" {% if category.slug in selected_categories %}checked{% endif %}> {{ category.name }}</label>
+                            {% endfor %}
+                        </div>
+
+                        <div class="filter-group">
+                            <h3>Size</h3>
+                            <div class="filter-chips">
+                                {% for size in sizes %}
+                                    <label><input type="checkbox" name="size" value="{{ size.slug }}" {% if size.slug in selected_sizes %}checked{% endif %}><span>{{ size.name }}</span></label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <h3>Price</h3>
+                            <label><input type="radio" name="price" value="all" {% if not selected_price or selected_price == 'all' %}checked{% endif %}> All prices</label>
+                            <label><input type="radio" name="price" value="under-50" {% if selected_price == 'under-50' %}checked{% endif %}> Under $50</label>
+                            <label><input type="radio" name="price" value="50-100" {% if selected_price == '50-100' %}checked{% endif %}> $50 - $100</label>
+                            <label><input type="radio" name="price" value="sale" {% if selected_price == 'sale' %}checked{% endif %}> Sale only</label>
+                        </div>
+                    </div>
+            </aside>
+
+            <div class="catalog-active-tags" aria-label="Active filters">
+                <span>In stock</span>
+                <span>Core colors</span>
+                <span>New drop</span>
+            </div>
+
+
+            <div class="catalog-product-grid" id="product-list">
+                {% include 'products/partial/product-list.html' %}
+            </div>
+            </form>
+        </section>
+    </section>

@@ -28,6 +28,7 @@ class CategoryAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug', 'short_description']
     prepopulated_fields = {'slug': ('name', )}
+    inlines = [ProductImageInline]
 
 @admin.register(ProductVariant)
 class ProductVariant(admin.ModelAdmin):

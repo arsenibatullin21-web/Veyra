@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Veyra{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'products/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="product-detail-page">
+    <section class="product-detail-container product-detail-shell">
+        <nav class="product-breadcrumb" aria-label="Breadcrumb">
+            <a href="{% url 'products:catalog' %}">Catalog</a>
+            <span>/</span>
+            <span>{{ product.category.name }}</span>
+            <span>/</span>
+            <strong>{{ product.name }}</strong>
+        </nav>
+
+        <section class="product-detail-layout">
+            <div class="product-gallery" data-product-gallery>
+                <div class="product-main-media">
+                    {% if product.is_new %}
+                        <span class="product-badge">New</span>
+                    {% endif %}
+                    {% if product.is_sale %}
+                        <span class="product-badge detail-sale">Sale</span>
+                    {% endif %}
+                    {% if product.main_image %}
+                        <img src="{{ product.main_image.url }}" alt="{{ product.name }}" data-main-product-image>
+                    {% else %}
+                        <div class="product-image-placeholder" data-main-product-image>{{ product.name|slice:":1" }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="product-thumbnails" aria-label="Product images">
+                    {% if product.main_image %}
+                        <button type="button" class="product-thumb active" data-image-src="{{ product.main_image.url }}" aria-label="Show main image">
+                            <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+                        </button>
+                    {% endif %}
+
+                    {% for image in product.images.all %}
+                            <button type="button" class="product-thumb" data-image-src="{{ image.image.url }}" aria-label="Show {{ product.color.name }} image">
+                                <img src="{{ image.image.url }}" alt="{{ product.name }} {{ product.color.name }}">
+                            </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <aside class="product-purchase-panel">
+                <p class="section-kicker">{{ product.category.name }}</p>
+                <h1>{{ product.name }}</h1>
+                <p class="product-detail-description">
+                    {% if product.description %}
+                        {{ product.description }}
+                    {% else %}
+                        {{ product.short_description }}
+                    {% endif %}
+                </p>
+
+                {% with first_variant=product.variants.first %}
+                    <div class="product-price-block">
+                        {% if first_variant.discount %}
+                            <strong data-product-price>${{ first_variant.final_price }}</strong>
+                            <span data-product-old-price>${{ first_variant.price }}</span>
+                        {% else %}
+                            <strong data-product-price>${{ first_variant.price }}</strong>
+                            <span data-product-old-price hidden></span>
+                        {% endif %}
+                    </div>
+
+                    <form class="product-buy-form" action="#" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="variant_id" value="{{ first_variant.id }}" data-selected-variant>
+                        <div class="product-variant-data" hidden>
+                            {% for variant in product.variants.all %}
+                                <span data-variant-option
+                                      data-variant-id="{{ variant.id }}"
+                                      data-variant-price="{{ variant.final_price }}"
+                                      data-variant-old-price="{% if variant.discount %}{{ variant.price }}{% endif %}"
+                                      data-color-id="{{ product.color.id }}"
+                                      data-color-name="{{ product.color.name }}"
+                                      data-size-id="{{ variant.size.id }}"
+                                      data-size-name="{{ variant.size.name }}"
+                                      data-stock="{{ variant.stock }}"
+                                      {% if variant.images.first %}
+                                          data-image="{{ variant.images.first.image.url }}"
+                                      {% else %}
+                                          data-image="{% if product.main_image %}{{ product.main_image.url }}{% endif %}"
+                                      {% endif %}></span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="detail-option-group">
+                            <div class="detail-option-head">
+                                <h2>Color</h2>
+                                <span data-selected-color>{% if product.color %}{{ product.color.name }}{% endif %}</span>
+                            </div>
+
+                            <div class="detail-color-options">
+                                <input type="radio"
+                                       name="color_choice"
+                                       value="{{ product.color.id }}"
+                                       checked
+                                       data-color-choice
+                                       hidden>
+                                {% for color_product in color_products %}
+                                    <a href="{{ color_product.get_absolute_url }}"
+                                       class="detail-color-choice {% if color_product.id == product.id %}active{% endif %}"
+                                       title="{{ color_product.color.name }}"
+                                       style="--swatch: {{ color_product.color.hex_code }}">
+                                        <span aria-hidden="true"></span>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="detail-option-group">
+                            <div class="detail-option-head">
+                                <h2>Size</h2>
+                                <span data-selected-size>{% if first_variant %}{{ first_variant.size.name }}{% endif %}</span>
+                            </div>
+
+                            <div class="detail-size-options" data-size-options>
+                            </div>
+                        </div>
+
+                        <div class="product-stock-row">
+                            <span>Stock</span>
+                            <strong data-product-stock>
+                                {% if first_variant %}
+                                    {{ first_variant.stock }} available
+                                {% else %}
+                                    Not available
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="quantity-row">
+                            <label for="quantity">Quantity</label>
+                            <div class="quantity-control">
+                                <button type="button" data-quantity-step="-1" aria-label="Decrease quantity">-</button>
+                                <input id="quantity" type="number" name="quantity" value="1" min="1" max="{{ first_variant.stock }}" data-quantity-input>
+                                <button type="button" data-quantity-step="1" aria-label="Increase quantity">+</button>
+                            </div>
+                        </div>
+
+                        <div class="product-actions">
+                            <button type="submit" class="product-add-button">Add to cart</button>
+                            <button type="button" class="product-save-button">Save</button>
+                        </div>
+                    </form>
+                {% endwith %}
+
+                <div class="product-service-list">
+                    <div>
+                        <strong>Free exchange</strong>
+                        <span>Change size or color before shipping.</span>
+                    </div>
+                    <div>
+                        <strong>Order updates</strong>
+                        <span>Later this can connect to notifications and Celery email tasks.</span>
+                    </div>
+                    <div>
+                        <strong>Secure checkout</strong>
+                        <span>Ready for cart, payment, and order flow practice.</span>
+                    </div>
+                </div>
+            </aside>
+        </section>
+
+        <section class="product-detail-extra">
+            <article>
+                <p class="section-kicker">Details</p>
+                <h2>Made for everyday rotation.</h2>
+                <p>{{ product.short_description }}</p>
+            </article>
+
+            <article>
+                <p class="section-kicker">Available options</p>
+                <div class="detail-meta-grid">
+                    <div>
+                        <span>Colors</span>
+                        <strong>{{ product.available_colors.count }}</strong>
+                    </div>
+                    <div>
+                        <span>Sizes</span>
+                        <strong>{{ product.available_sizes.count }}</strong>
+                    </div>
+                    <div>
+                        <span>Variants</span>
+                        <strong>{{ product.variants.count }}</strong>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getVariantOptions() {
+        return Array.from(document.querySelectorAll('[data-variant-option]')).map(function (item) {
+            return {
+                id: item.dataset.variantId,
+                price: item.dataset.variantPrice,
+                oldPrice: item.dataset.variantOldPrice,
+                colorId: item.dataset.colorId,
+                colorName: item.dataset.colorName,
+                sizeId: item.dataset.sizeId,
+                sizeName: item.dataset.sizeName,
+                stock: item.dataset.stock,
+                image: item.dataset.image,
+            };
+        });
+    }
+
+    function updateSelectedVariant(variant) {
+        if (!variant) {
+            return;
+        }
+
+        document.querySelector('[data-selected-variant]').value = variant.id;
+        document.querySelector('[data-product-price]').textContent = `$${variant.price}`;
+        document.querySelector('[data-selected-color]').textContent = variant.colorName;
+        document.querySelector('[data-selected-size]').textContent = variant.sizeName;
+        document.querySelector('[data-product-stock]').textContent = `${variant.stock} available`;
+        const mainImage = document.querySelector('[data-main-product-image]');
+        const quantityInput = document.querySelector('[data-quantity-input]');
+
+        if (quantityInput) {
+            quantityInput.max = variant.stock;
+
+            if (Number(quantityInput.value) > Number(variant.stock)) {
+                quantityInput.value = variant.stock;
+            }
+        }
+        if (mainImage && mainImage.tagName === 'IMG' && variant.image) {
+            mainImage.src = variant.image;
+        }
+
+        const oldPrice = document.querySelector('[data-product-old-price]');
+
+        if (variant.oldPrice) {
+            oldPrice.hidden = false;
+            oldPrice.textContent = `$${variant.oldPrice}`;
+        } else {
+            oldPrice.hidden = true;
+            oldPrice.textContent = '';
+        }
+
+        document.querySelectorAll('[data-size-variant]').forEach(function (button) {
+            button.classList.toggle('active', button.dataset.sizeVariant === variant.id);
+        });
+    }
+
+    function renderSizesForColor(colorId) {
+        const wrapper = document.querySelector('[data-size-options]');
+        const variants = getVariantOptions().filter(function (variant) {
+            return variant.colorId === colorId;
+        });
+
+        wrapper.innerHTML = '';
+
+        variants.forEach(function (variant, index) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `detail-size-choice${index === 0 ? ' active' : ''}`;
+            button.dataset.sizeVariant = variant.id;
+            button.textContent = variant.sizeName;
+            wrapper.appendChild(button);
+        });
+
+        updateSelectedVariant(variants[0]);
+    }
+
+    document.addEventListener('click', function (event) {
+        const thumb = event.target.closest('.product-thumb');
+
+        if (thumb) {
+            const gallery = thumb.closest('[data-product-gallery]');
+            const image = gallery.querySelector('[data-main-product-image]');
+
+            if (image && image.tagName === 'IMG' && thumb.dataset.imageSrc) {
+                image.src = thumb.dataset.imageSrc;
+            }
+            gallery.querySelectorAll('.product-thumb').forEach(function (item) {
+                item.classList.toggle('active', item === thumb);
+            });
+        }
+
+        const sizeButton = event.target.closest('[data-size-variant]');
+
+        if (sizeButton) {
+            const variant = getVariantOptions().find(function (item) {
+                return item.id === sizeButton.dataset.sizeVariant;
+            });
+
+            updateSelectedVariant(variant);
+        }
+
+        const quantityButton = event.target.closest('[data-quantity-step]');
+
+        if (quantityButton) {
+            const input = document.querySelector('#quantity');
+            const nextValue = Number(input.value || 1) + Number(quantityButton.dataset.quantityStep);
+            const max = Number(input.max || 1);
+            input.value = Math.min(max, Math.max(1, nextValue));
+        }
+    });
+
+    document.addEventListener('change', function (event) {
+        const colorInput = event.target.closest('[data-color-choice]');
+
+        if (!colorInput) {
+            return;
+        }
+
+        renderSizesForColor(colorInput.value);
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkedColor = document.querySelector('[data-color-choice]:checked');
+
+        if (checkedColor) {
+            renderSizesForColor(checkedColor.value);
+        }
+    });
+</script>
+{% endblock %}

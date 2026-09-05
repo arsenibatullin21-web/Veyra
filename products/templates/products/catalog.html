@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Catalog - Veyra{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'products/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="catalog-page">
+    <section class="catalog-hero">
+        <div class="catalog-container catalog-hero-inner">
+            <div>
+                <p class="section-kicker">Catalog</p>
+                <h1>Everyday pieces, sorted by fit and function.</h1>
+                <p>
+                    Browse the current Veyra selection: hoodies, tees, pants, and compact daily essentials with clear sizes, colors, stock, and prices.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <div id="catalog-shell">
+        {% include 'products/partial/catalog-partial.html' %}
+    </div>
+
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let catalogFiltersOpen = true;
+    let catalogScrollY = 0;
+
+    function setCatalogFiltersState(isOpen) {
+        const layout = document.querySelector('[data-catalog-layout]');
+        const toggle = document.querySelector('[data-filter-toggle]');
+
+        if (!layout || !toggle) {
+            return;
+        }
+
+        layout.classList.toggle('filters-open', isOpen);
+        toggle.setAttribute('aria-expanded', String(isOpen));
+        toggle.textContent = isOpen ? 'Hide filters' : 'Show filters';
+    }
+
+    document.addEventListener('click', function (event) {
+        const toggle = event.target.closest('[data-filter-toggle]');
+
+        if (!toggle) {
+            return;
+        }
+
+        const layout = toggle.closest('[data-catalog-layout]');
+
+        if (!layout) {
+            return;
+        }
+
+        catalogFiltersOpen = !layout.classList.contains('filters-open');
+        setCatalogFiltersState(catalogFiltersOpen);
+    });
+
+    document.body.addEventListener('htmx:beforeRequest', function (event) {
+        if (event.detail.elt.closest('[data-catalog-layout]')) {
+            catalogScrollY = window.scrollY;
+        }
+    });
+
+    document.body.addEventListener('htmx:afterSwap', function (event) {
+        if (event.detail.target.id === 'catalog-shell') {
+            setCatalogFiltersState(catalogFiltersOpen);
+            window.scrollTo({ top: catalogScrollY });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+ {% for product in products %}
+                <article class="catalog-product-card">
+                    <a href="{{ product.get_absolute_url }}" class="catalog-product-media">
+                        {% if product.is_new %}
+                            <span class="product-badge">New</span>
+                        {% endif %}
+                        {% if product.is_sale %}
+                            <span class="product-badge">Sale</span>
+                        {% endif %}
+                        <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+                    </a>
+                    <div class="catalog-product-info">
+                        {% with variant=product.variants.first %}
+                        <div class="catalog-product-title">
+                            <h3>{{ product.name }}</h3>
+                            {% if variant.discount %}
+                                    <strong>${{ variant.final_price }}</strong>
+                                    <span style="text-decoration: line-through;">${{ variant.price }}</span>
+                            {% else %}
+                                    <strong>${{ variant.price }}</strong>
+                            {% endif %}
+                        </div>
+{#                        <p>{{ product.short_description }}</p>#}
+                        {% endwith %}
+                    </div>
+                </article>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <div class="catalog-scroll-trigger"
+                         hx-get="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
+                        hx-push-url="false"
+                         hx-target="this"
+                         hx-trigger="revealed"
+                         hx-swap="outerHTML"
+                         aria-hidden="true"
+                    >
+
+                    </div>
+                {% endif %}

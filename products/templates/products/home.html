@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Veyra - Modern Clothing Essentials{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'products/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="home-page">
+    <section class="home-container home-hero">
+        <div class="hero-copy">
+            <p class="hero-label">New season essentials</p>
+            <h1 class="hero-title">Quiet clothes for loud days.</h1>
+            <p class="hero-text">
+                Veyra builds clean daily pieces with structured fits, soft textures, and colors that work together without asking for attention.
+            </p>
+
+            <div class="hero-actions">
+                <a href="{% url 'products:catalog' %}" class="home-button primary">Shop catalog</a>
+                {% if not request.user.is_authenticated %}
+                    <a href="{% url 'users:register' %}" class="home-button">Create account</a>
+                {% endif %}
+            </div>
+
+            <div class="hero-stats" aria-label="Store highlights">
+                <div class="hero-stat">
+                    <strong>32</strong>
+                    <span>new variants</span>
+                </div>
+                <div class="hero-stat">
+                    <strong>4</strong>
+                    <span>core colors</span>
+                </div>
+                <div class="hero-stat">
+                    <strong>24h</strong>
+                    <span>order updates</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-visual" aria-label="Featured Veyra hoodie">
+            <div class="hero-product">
+                <img src="{% static 'img/veyra-oversized-hoodie.webp' %}" alt="Black Veyra oversized hood" class="hero-image">
+                <div class="hero-product-tag">
+                    <span>Featured drop</span>
+                    <strong>Oversized Hoodie / Black</strong>
+                </div>
+            </div>
+            <div class="hero-strip">
+                <span>Heavy cotton</span>
+                <span>Relaxed fit</span>
+                <span>Limited drop</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-band white">
+        <div class="home-container">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">Categories</p>
+                    <h2 class="section-title">Start with the pieces people reach for first.</h2>
+                </div>
+            </div>
+
+            <div class="category-grid">
+                <a href="{% url 'products:catalog' %}?category=hoodies" class="category-tile large">
+                    <img src="{% static 'img/6a0d0591-d7fe-41e4-bd2f-fa7b780e7fcf.webp' %}" alt="Veyra hoodies collection">
+                    <span class="category-overlay"></span>
+                    <span class="category-content">
+                        <strong>Hoodies</strong>
+                        <span>Warm layers with oversized shapes and quiet details.</span>
+                    </span>
+                </a>
+                <a href="{% url 'products:catalog' %}?category=t-shirts" class="category-tile light">
+                    <img src="/media/categories/tshirts.jpg" alt="Veyra t-shirts collection">
+                    <span class="category-overlay"></span>
+                    <span class="category-content">
+                        <strong>T-Shirts</strong>
+                        <span>Soft daily essentials for every rotation.</span>
+                    </span>
+                </a>
+                <a href="{% url 'products:catalog' %}?category=pants" class="category-tile warm">
+                    <img src="/media/categories/pants.jpg" alt="Veyra pants collection">
+                    <span class="category-overlay"></span>
+                    <span class="category-content">
+                        <strong>Pants</strong>
+                        <span>Relaxed utility silhouettes for city movement.</span>
+                    </span>
+                </a>
+                <a href="{% url 'products:catalog' %}?category=accessories" class="category-tile">
+                    <img src="/media/categories/accessories.jpg" alt="Veyra accessories collection">
+                    <span class="category-overlay"></span>
+                    <span class="category-content">
+                        <strong>Accessories</strong>
+                        <span>Small pieces that finish the outfit.</span>
+                    </span>
+                </a>
+                <a href="{% url 'products:catalog' %}?category=new-drop" class="category-tile light">
+                    <img src="/media/categories/new-drop.jpg" alt="Veyra new clothing drop">
+                    <span class="category-overlay"></span>
+                    <span class="category-content">
+                        <strong>New Drop</strong>
+                        <span>Fresh colors, sizes, and limited stock.</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-band">
+        <div class="home-container">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">Featured products</p>
+                    <h2 class="section-title">Built around color, size, and stock.</h2>
+                </div>
+                <a href="{% url 'products:catalog' %}" class="home-button">View all products</a>
+            </div>
+
+            <div class="product-grid">
+                {% for product in products|slice:3 %}
+                <article class="product-card">
+                    <div class="product-media">
+                        {% if products.is_new %}
+                            <span class="product-badge">New</span>
+                        {% endif %}
+                        {% if product.is_sale %}
+                            <span class="product-badge">Sale</span>
+                        {% endif %}
+                        <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+                    </div>
+                    <div class="product-info">
+                    {% with variant=product.variants.first %}
+                        <div class="product-title-row">
+                            <h3>{{ product.name }}</h3>
+                                {% if variant.discount %}
+                                    <strong>${{ variant.final_price }}</strong>
+                                    <span style="text-decoration: line-through;">${{ variant.price }}</span>
+                                {% else %}
+                                    <strong>${{ variant.price }}</strong>
+                                {% endif %}
+                        </div>
+                        <p>{{ product.short_description }}</p>
+                        <div class="product-meta-row">
+                            <div class="swatches" aria-label="Available colors">
+                                {% for color in product.available_colors %}
+                                    <span class="swatch" style="--swatch: {{ color.hex_code }}"></span>
+                                {% endfor %}
+                            </div>
+                            <div class="sizes">
+                                {% for size in product.available_sizes %}
+                                    <span class="size-chip">{{ size.name }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endwith %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="section-band white">
+        <div class="home-container feature-layout">
+            <div class="feature-panel">
+                <img src="/media/products/variant-selection.jpg" alt="Clothing colors and sizes" class="feature-image">
+                <span class="feature-overlay"></span>
+                <p class="section-kicker">Shop logic</p>
+                <h2>Every item stays simple until the customer chooses.</h2>
+                <p>
+                    Product pages can show one product, then reveal colors, sizes, stock, final price, discounts, and gallery images from variants.
+                </p>
+            </div>
+
+            <div class="feature-list">
+                <article class="feature-item">
+                    <span class="feature-number">01</span>
+                    <div>
+                        <h3>Product</h3>
+                        <p>General title, description, category, and main image for catalog browsing.</p>
+                    </div>
+                </article>
+                <article class="feature-item">
+                    <span class="feature-number">02</span>
+                    <div>
+                        <h3>Variant</h3>
+                        <p>Exact color and size combination with SKU, price, discount, and stock.</p>
+                    </div>
+                </article>
+                <article class="feature-item">
+                    <span class="feature-number">03</span>
+                    <div>
+                        <h3>Gallery</h3>
+                        <p>Images connected to a variant, useful when black and white products need different photos.</p>
+                    </div>
+                </article>
+                <article class="feature-item">
+                    <span class="feature-number">04</span>
+                    <div>
+                        <h3>Account</h3>
+                        <p>Profile, orders, notifications, and later payment history can sit behind login.</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-band">
+        <div class="home-container">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker">Current drop</p>
+                    <h2 class="section-title">A smaller catalog is easier to make feel real.</h2>
+                </div>
+                <p class="section-text">
+                    Use this section for limited releases, discounted variants, or products with low stock.
+                </p>
+            </div>
+
+            <div class="drop-section">
+                <article class="drop-card accent">
+                    <img src="/media/products/black-hoodie-restock.jpg" alt="Black hoodie restock" class="drop-image">
+                    <span class="drop-overlay"></span>
+                    <div class="drop-content">
+                        <h3>Gray hoodie restock</h3>
+                        <p>Back in sizes S, M, and L with a short discount window.</p>
+                    </div>
+                    <div class="drop-meta">
+                        <span>14% off</span>
+                        <span>7 left</span>
+                        <span>Core color</span>
+                    </div>
+                </article>
+
+                <article class="drop-card">
+                    <img src="/media/products/stone-cargo-pants.jpg" alt="Stone cargo pants drop" class="drop-image">
+                    <span class="drop-overlay"></span>
+                    <div class="drop-content">
+                        <h3>Stone cargo pants</h3>
+                        <p>Relaxed fit, practical pockets, and a calmer tone for spring outfits.</p>
+                    </div>
+                    <div class="drop-meta">
+                        <span>12% off</span>
+                        <span>4 left</span>
+                        <span>Limited</span>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-band white">
+        <div class="home-container">
+            <div class="newsletter">
+                <div>
+                    <h2>Get restock notes and drop alerts.</h2>
+                    <p>
+                        Later this can connect to Celery and Redis: user subscribes, task sends email, Redis helps with background jobs.
+                    </p>
+                </div>
+                <form class="newsletter-form" action="#" method="post">
+                    <input type="email" name="email" placeholder="Email address" aria-label="Email address">
+                    <button type="submit">Notify me</button>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
