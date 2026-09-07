@@ -44,7 +44,8 @@ BASE_APPS = [
 PROJECT_APPS = [
     'users.apps.UsersConfig',
     'products.apps.ProductsConfig',
-    'orders.apps.OrdersConfig'
+    'orders.apps.OrdersConfig',
+    'cart.apps.CartConfig'
 ]
 
 THIRD_WAY_APPS = [
