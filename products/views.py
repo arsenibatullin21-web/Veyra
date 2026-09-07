@@ -1,16 +1,20 @@
-from sys import prefix
-
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.db.models import Min
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-
+from rest_framework import generics, mixins, permissions
+from rest_framework.exceptions import PermissionDenied as PermissionDeniedDrf
 from products.forms import ProductCreateForm, ProductVariantCreateInlineFormSet, ProductImageCreateInlineFormSet, \
     ProductUpdateForm, ProductVariantUpdateInlineFormSet, ProductImageUpdateInlineFormset
-from products.models import Product, Category, ProductImage, ProductVariant, Size, Color
+from products.models import Product, Category, ProductImage, ProductVariant, Size, Color, PromoCode
+from products.permissions import IsStaff
+from products.serializers import CategoryListDetailSerializer, CategoryCreateUpdateSerializer, SizeListDetailSerializer, \
+    SizeCreateUpdateSerializer, ColorCreateUpdateSerializer, ProductListSerializer, ProductDetailSerializer, \
+    ProductCreateUpdateSerializer, ProductVariantDetailSerializer, ProductVariantListSerializer, \
+    ProductVariantSerializer, ColorListDetailSerializer, PromoCodeListSerializer, PromoCodeCreateUpdateSerializer
 from products.services import create_product_with_variant, update_product_with_variant
 
 
@@ -240,3 +244,252 @@ class ProductDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         return self.request.user.is_staff
     
+
+
+
+
+
+class CategoryListDetailAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin, generics.GenericAPIView):
+    '''Everyone authenticated can see categories'''
+    model = Category
+    serializer_class = CategoryListDetailSerializer
+    permission_classes = [permissions.IsAuthenticated, ]
+    queryset = Category.objects.all()
+    lookup_url_kwarg = 'category_id'
+
+    def get(self, request, *args, **kwargs):
+        if 'category_id' in kwargs:
+            return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
+
+
+
+class CategoryCreateUpdateAPIView(mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    '''Only stuf can create/update categories'''
+    serializer_class = CategoryCreateUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated, IsStaff]
+    lookup_url_kwarg = 'category_id'
+
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            raise PermissionDeniedDrf('You dont have access to this page.')
+
+        return Category.objects.all()
+
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+
+class SizeListDetailAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin, generics.GenericAPIView):
+    serializer_class = SizeListDetailSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = 'size_id'
+
+    def get_queryset(self):
+        return Size.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        if 'size_id' in kwargs:
+            return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
+
+
+class SizeCreateUpdateAPIView(mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    serializer_class = SizeCreateUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated, IsStaff]
+    lookup_url_kwarg = 'size_id'
+
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            raise PermissionDeniedDrf('You dont have access to this page.')
+        return Size.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+
+class ColorListDetailAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin, generics.GenericAPIView):
+    serializer_class = ColorListDetailSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = 'color_id'
+
+    def get_queryset(self):
+        return Color.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        if 'color_id' in kwargs:
+            return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
+
+
+class ColorCreateUpdateAPIView(mixins.CreateModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView, mixins.DestroyModelMixin):
+    serializer_class = ColorCreateUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated, IsStaff]
+    lookup_url_kwarg = 'color_id'
+
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            raise PermissionDeniedDrf('You dont have access to this page.')
+        return Color.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+
+
+
+class ProductListDetailAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin, generics.GenericAPIView):
+    queryset = Product.objects.all()
+    permission_classes = [permissions.IsAuthenticated, ]
+    lookup_url_kwarg = 'product_id'
+
+    def get_serializer_class(self):
+        if 'product_id' in self.kwargs:
+            return ProductDetailSerializer
+        return ProductListSerializer
+
+    def get(self, request, *args, **kwargs):
+        if 'product_id' in kwargs:
+            return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
+
+
+
+class ProductCreateUpdateAPIView(mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    serializer_class = ProductCreateUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated, IsStaff]
+    lookup_url_kwarg = 'product_id'
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            raise PermissionDeniedDrf('You dont have access to this page.')
+        return Product.objects.all()
+
+
+
+
+class ProductVariantsListDetailAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin, generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated, ]
+    lookup_url_kwarg = 'product_variant_id'
+
+    def get_queryset(self):
+        product = get_object_or_404(Product, id=self.kwargs.get('product_variant_id'))
+
+        return ProductVariant.objects.filter(product=product)
+
+    def get_serializer_class(self):
+        if 'product_variant_id' in self.kwargs:
+            return ProductVariantDetailSerializer
+        return ProductVariantListSerializer
+
+    def get(self, request, *args, **kwargs):
+        if 'product_variant_id' in kwargs:
+            return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
+
+
+class ProductVariantCreateUpdateAPIView(mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    serializer_class = ProductVariantSerializer
+    permission_classes = [permissions.IsAuthenticated, IsStaff]
+    lookup_url_kwarg = 'product_variant_id'
+
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            raise PermissionDeniedDrf('You dont have access to this page.')
+        return ProductVariant.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+
+    def perform_create(self, serializer):
+        product = get_object_or_404(Product, pk=self.kwargs.get('product_variant_id'))
+        serializer.save(product=product)
+
+
+class PromoCodeListAPIView(generics.ListAPIView):
+    queryset = PromoCode.objects.all()
+    serializer_class = PromoCodeListSerializer
+    permission_classes = [permissions.IsAuthenticated, IsStaff]
+
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            raise PermissionDeniedDrf('You dont have access to this page.')
+
+        return PromoCode.objects.all()
+
+
+class PromoCodeCreateUpdateAPIView(mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsStaff]
+    serializer_class = PromoCodeCreateUpdateSerializer
+    lookup_url_kwarg = 'promocode_id'
+
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            raise PermissionDeniedDrf("You dont have access to this page.")
+        return PromoCode.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
