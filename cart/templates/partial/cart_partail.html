@@ -1,0 +1,142 @@
+<section class="cart-layout">
+            <div class="cart-items-panel">
+                <div class="cart-panel-head">
+                    <div>
+                        <h2>Clothes</h2>
+                        <p>{{ cart_len }} clothes in your bag</p>
+                    </div>
+                    {% if cart_len > 0 %}
+                    <form action="{% url 'cart:clear' %}" method="post"
+                          hx-post="{% url 'cart:clear' %}"
+                          hx-target="#cart-shell"
+                    >
+                        {% csrf_token %}
+                        <button type="submit" class="cart-clear-button">Clear cart</button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                {% for item in cart %}
+                    {% with base_product=item.product.product product=item.product %}
+                        <article class="cart-item">
+                            <div class="cart-item-media">
+                                <img src="{{ base_product.image.url }}" alt="{{ base_product.name }}">
+                            </div>
+                            <div class="cart-item-info">
+                                <div>
+                                    <span class="cart-item-category">{{ base_product.category }}</span>
+                                    <h3>{{ base_product.name }}</h3>
+                                    <p>{{ base_product.color }} / Size {{ product.size }}</p>
+                                </div>
+                                <form action="{% url 'cart:remove' product.id %}" method="post"
+                                      hx-post="{% url 'cart:remove' product.id %}"
+                                      hx-target="#cart-shell"
+                                >
+                                    {% csrf_token %}
+                                    <button type="submit" class="cart-remove-button">Remove</button>
+                                </form>
+                            </div>
+                            <div class="cart-item-controls">
+                                <form action="{% url 'cart:update' product.id %}" method="get"
+                                      hx-get="{% url 'cart:update' product.id %}"
+                                      hx-target="#cart-shell"
+                                >
+                                    <div class="cart-quantity" data-cart-quantity>
+                                        <button type="submit" name="action" value="decrease" aria-label="Decrease quantity">-</button>
+                                        <input type="number" value="{{ item.quantity }}" min="1" max="{{ product.stock }}" aria-label="Quantity in cart" readonly>
+                                        <button type="submit" name="action" value="increase" {% if item.quantity >= product.stock %}disabled{% endif %} aria-label="Increase quantity">+</button>
+                                    </div>
+                                </form>
+                                <div class="cart-item__price-group">
+                                    <div class="cart-item__unit-price">
+                                        {% if product.discount %}
+                                            <span class="cart-item__price-old">${{ product.price }}</span>
+                                        {% endif %}
+                                        {% if item.quantity > 1 %}
+                                            <strong>${{ item.total_price }}</strong>
+                                        {% else %}
+                                            <strong>${{ item.price }}</strong>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    {% endwith %}
+                {% empty %}
+                <section class="cart-empty-state">
+                    <h2>Your cart is empty</h2>
+                    <p>Use this block later when the session cart has no items.</p>
+                    <a href="/products/catalog/">Browse catalog</a>
+                </section>
+                {% endfor %}
+
+            </div>
+
+            <aside class="cart-summary-panel">
+                <div class="cart-summary-head">
+                    <p class="section-kicker">Order summary</p>
+                    <h2>Checkout preview</h2>
+                </div>
+
+                <div class="cart-promo-box">
+                    <label for="promo-code">Promo code</label>
+                    {% if not promo_obj %}
+                    <form action="{% url 'cart:appy-promo' %}"
+                        hx-get="{% url 'cart:appy-promo' %}"
+                        hx-target="#cart-shell"
+                        >
+                        <div>
+                            <input id="promo-code" type="text" name="promo" placeholder="SALE10">
+                            <button type="submit">Apply</button>
+                        </div>
+                    </form>
+                    {% else %}
+                     <form action="{% url 'cart:remove-promo' %}" method="post"
+                        hx-post="{% url 'cart:remove-promo' %}"
+                        hx-target="#cart-shell">
+                     {% csrf_token %}
+                        <div>
+                            <input id="promo-code" type="text" name="promo" value="{{ promo_obj.name }}" disabled>
+                            <button type="submit">Remove</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <dl class="cart-total-list">
+                    <div>
+                        <dt>Subtotal</dt>
+                        <dd>${{ subtotal }}</dd>
+                    </div>
+                    <div>
+                        <dt>Discount</dt>
+                        <dd>$-{{ discount }}</dd>
+                    </div>
+                    <div>
+                        <dt>Delivery</dt>
+                        <dd>$10</dd>
+                    </div>
+                    <div class="cart-grand-total">
+                        <dt>Total</dt>
+                        <dd>${{ total }}</dd>
+                    </div>
+                </dl>
+
+                <a href="#" class="cart-checkout-button">Continue to checkout</a>
+
+                <div class="cart-trust-list">
+                    <div>
+                        <strong>Secure payment</strong>
+                        <span>Stripe checkout can be connected here later.</span>
+                    </div>
+                    <div>
+                        <strong>Stock checked</strong>
+                        <span>Quantity should be validated against variant stock.</span>
+                    </div>
+                    <div>
+                        <strong>Email updates</strong>
+                        <span>Order notifications can use Celery and Redis.</span>
+                    </div>
+                </div>
+            </aside>
+        </section>>

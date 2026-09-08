@@ -117,6 +117,11 @@ class ProductDetailView(DetailView):
             context['color_products'] = Product.available.filter(pk=self.object.pk).select_related('color')
         return context
 
+    def get_template_names(self):
+        if self.request.headers.get('HX-Request') == 'true':
+            return ['partial/cart_budge_partail.html']
+        return ['products/detail.html']
+
 class ProductCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Product
     template_name = 'products/product_create.html'

@@ -1,0 +1,12 @@
+<a href="{% url 'cart:detail' %}" class="nav-button nav-icon-button" aria-label="Open cart" title="Cart"
+   hx-swap-oob="true"
+   id="budge"
+>
+    {% include 'partial/cart_budge_partail.html' %}
+</a>
+
+<div id="msg" hx-swap-oob="true">
+    {% include 'partial/messages.html' %}
+</div>
+
+{% include 'partial/cart_partail.html' %}

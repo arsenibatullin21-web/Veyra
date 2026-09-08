@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cart - Veyra{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'cart/cart.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="cart-page">
+    <section class="cart-container cart-shell">
+        <div class="cart-head">
+            <div>
+                <p class="section-kicker">Shopping cart</p>
+                <h1>Your selected pieces</h1>
+                <p>Review sizes, quantity, and delivery details before checkout.</p>
+            </div>
+            <a href="/products/catalog/" class="cart-continue-link">Continue shopping</a>
+        </div>
+
+    <div id="cart-shell">
+        {% include 'partial/cart_partail.html' %}
+    </div>
+
+
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('click', function (event) {
+        const stepButton = event.target.closest('[data-cart-step]');
+
+        if (!stepButton) {
+            return;
+        }
+
+        const quantity = stepButton.closest('[data-cart-quantity]');
+        const input = quantity.querySelector('input');
+        const step = Number(stepButton.dataset.cartStep);
+        const min = Number(input.min) || 1;
+        const max = Number(input.max) || 99;
+        const nextValue = Math.min(max, Math.max(min, Number(input.value) + step));
+
+        input.value = nextValue;
+    });
+</script>
+{% endblock %}

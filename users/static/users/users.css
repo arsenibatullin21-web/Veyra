@@ -293,8 +293,13 @@
         flex-wrap: wrap;
     }
 
+    .profile-logout-form {
+        margin: 0;
+    }
+
     .profile-primary-action,
     .profile-secondary-action,
+    .profile-logout-action,
     .profile-close-button {
         min-height: 42px;
         display: inline-flex;
@@ -320,6 +325,12 @@
         background: #ffffff;
     }
 
+    .profile-logout-action {
+        border: 1px solid #fecaca;
+        color: #b42318;
+        background: #fff5f5;
+    }
+
     .profile-primary-action:hover {
         background: #115e59;
         border-color: #115e59;
@@ -329,6 +340,11 @@
     .profile-close-button:hover {
         background: #f9fafb;
         border-color: #98a2b3;
+    }
+
+    .profile-logout-action:hover {
+        border-color: #fca5a5;
+        background: #fee2e2;
     }
 
     .profile-layout {
@@ -480,8 +496,13 @@
         }
 
         .profile-actions a,
-        .profile-actions button {
+        .profile-actions button,
+        .profile-logout-form {
             flex: 1;
+        }
+
+        .profile-logout-form button {
+            width: 100%;
         }
     }
 

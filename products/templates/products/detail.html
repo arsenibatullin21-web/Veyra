@@ -71,7 +71,7 @@
                         {% endif %}
                     </div>
 
-                    <form class="product-buy-form" action="#" method="post">
+                    <form class="product-buy-form" action="{% url 'cart:add' %}" method="post">
                         {% csrf_token %}
                         <input type="hidden" name="variant_id" value="{{ first_variant.id }}" data-selected-variant>
                         <div class="product-variant-data" hidden>
@@ -136,15 +136,6 @@
                                     Not available
                                 {% endif %}
                             </strong>
-                        </div>
-
-                        <div class="quantity-row">
-                            <label for="quantity">Quantity</label>
-                            <div class="quantity-control">
-                                <button type="button" data-quantity-step="-1" aria-label="Decrease quantity">-</button>
-                                <input id="quantity" type="number" name="quantity" value="1" min="1" max="{{ first_variant.stock }}" data-quantity-input>
-                                <button type="button" data-quantity-step="1" aria-label="Increase quantity">+</button>
-                            </div>
                         </div>
 
                         <div class="product-actions">

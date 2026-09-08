@@ -132,6 +132,9 @@ class Product(models.Model):
     def available_colors(self):
         return Color.objects.filter(pk=self.color_id)
 
+    def get_absolute_url(self):
+        return reverse('products:detail', kwargs={'product_slug': self.slug})
+
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(to='Product', on_delete=models.CASCADE, related_name='variants')

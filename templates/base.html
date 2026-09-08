@@ -176,10 +176,6 @@
             gap: 10px;
         }
 
-        .header-logout-form {
-            margin: 0;
-        }
-
         .nav-button {
             min-height: 40px;
             display: inline-flex;
@@ -193,6 +189,37 @@
             font-size: 0.92rem;
             font-weight: 750;
             cursor: pointer;
+        }
+
+        .nav-icon-button {
+            position: relative;
+            width: 42px;
+            min-height: 40px;
+            padding: 0;
+            gap: 0;
+        }
+
+        .nav-icon-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .cart-count-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 18px;
+            height: 18px;
+            display: grid;
+            place-items: center;
+            padding: 0 4px;
+            border: 2px solid #ffffff;
+            border-radius: 999px;
+            color: #ffffff;
+            background: var(--danger);
+            font-size: 0.68rem;
+            font-weight: 850;
+            line-height: 1;
         }
 
         .nav-button.primary {
@@ -376,10 +403,11 @@
             <div class="header-actions">
                 {% if request.user.is_authenticated %}
                     <a href="{% url 'users:profile' %}" class="nav-button">Profile</a>
-                    <form method="post" action="{% url 'users:logout' %}" class="header-logout-form">
-                        {% csrf_token %}
-                        <button type="submit" class="nav-button">Logout</button>
-                    </form>
+
+
+                    <a href="{% url 'cart:detail' %}" class="nav-button nav-icon-button" aria-label="Open cart" title="Cart" id="budge">
+                        {% include 'partial/cart_budge_partail.html' %}
+                    </a>
                 {% else %}
                     <a href="{% url 'users:login' %}" class="nav-button">Log in</a>
                     <a href="{% url 'users:register' %}" class="nav-button primary">Create account</a>
@@ -388,14 +416,9 @@
         </div>
     </header>
 
-    {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <div class="message {{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
+   <div id="msg">
+       {% include 'partial/messages.html' %}
+   </div>
     <main class="site-main">
         {% block content %}{% endblock %}
     </main>

@@ -29,6 +29,10 @@
         <div class="profile-actions">
             <button type="button" class="profile-secondary-action" data-profile-edit-button>Edit profile</button>
             <button type="button" class="profile-primary-action" data-password-edit-button>Change password</button>
+            <form method="post" action="{% url 'users:logout' %}" class="profile-logout-form">
+                {% csrf_token %}
+                <button type="submit" class="profile-logout-action">Logout</button>
+            </form>
         </div>
     </header>
 
