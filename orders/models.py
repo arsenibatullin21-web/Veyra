@@ -43,7 +43,7 @@ class Order(models.Model):
         default=OrderType.PICKUP
     )
     status = models.CharField(
-        choices=PaymentStatus.choices,
+        choices=OrderStatus.choices,
         default=PaymentStatus.PENDING,
     )
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -60,7 +60,7 @@ class Order(models.Model):
 
     @property
     def get_total_cost(self):
-        return sum(item.get_cost() for item in self.items.all())
+        return sum(item.get_cost for item in self.items.all())
 
     def get_stripe_url(self):
         if not self.stripe_id:
@@ -83,8 +83,9 @@ class OrderItem(models.Model):
         verbose_name_plural = 'Order items'
 
     def __str__(self):
-        return f"{self.product.name} X {self.quantity}"
+        return f"{self.product_variant.product.name} X {self.quantity}"
 
+    @property
     def get_cost(self):
         return self.price * self.quantity
 
