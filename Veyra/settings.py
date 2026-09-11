@@ -156,6 +156,8 @@ LOGOUT_REDIRECT_URL = 'users:login'
 
 CART_SESSION_ID = 'cart'
 
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
+
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 

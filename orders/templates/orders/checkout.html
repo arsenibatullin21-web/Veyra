@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - Veyra{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'orders/checkout.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="checkout-page">
+    <section class="checkout-shell" data-checkout>
+        <div class="checkout-heading">
+            <p class="section-kicker">Secure checkout</p>
+            <h1>Complete your order</h1>
+        </div>
+
+        <ol class="checkout-steps" aria-label="Checkout steps">
+            <li class="is-active" data-step-indicator="1"><span>1</span><strong>Details</strong></li>
+            <li data-step-indicator="2"><span>2</span><strong>Delivery</strong></li>
+            <li data-step-indicator="3"><span>3</span><strong>Confirmation</strong></li>
+        </ol>
+
+        <div class="checkout-layout">
+            <section class="checkout-form-card">
+                <form action="{% url 'orders:create' %}" method="POST" data-checkout-form novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="product-form-alert">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    <section class="checkout-panel is-active" data-step-panel="1">
+                        <div class="panel-intro"><h2>Your details</h2><p>We’ll use these details for delivery updates.</p></div>
+                        <div class="checkout-fields two-columns">
+                            <label>First name<input type="text" id="first_name" name="{{ form.first_name.html_name }}" placeholder="Alex" required></label>
+                                {% if form.first_name.errors %}<div class="field-errors">{{ form.first_name.errors }}</div>{% endif %}
+
+                            <label>Last name<input type="text" name="{{ form.last_name.html_name }}" placeholder="Smith" required></label>
+                            {% if form.last_name.errors %}<div class="field-errors">{{ form.last_name.errors }}</div>{% endif %}
+                        </div>
+                        <div class="checkout-fields">
+                            <label>Email<input type="email" name="{{ form.email.html_name }}" placeholder="alex@example.com" required></label>
+                            {% if form.empty_permitted.errors %}<div class="field-errors">{{ form.email.errors }}</div>{% endif %}
+
+                            <label>Phone number<input type="tel" name="{{ form.phone.html_name }}" placeholder="+7 700 000 00 00" required></label>
+                            {% if form.phone.errors %}<div class="field-errors">{{ form.phone.errors }}</div>{% endif %}
+                        </div>
+                        <div class="checkout-actions checkout-actions-end"><button class="checkout-next" type="button" data-next-step>Continue</button></div>
+                    </section>
+
+                    <section class="checkout-panel" data-step-panel="2" hidden>
+                        <div class="panel-intro"><h2>Delivery method</h2><p>Choose how you’d like to receive your order.</p></div>
+                        <div class="delivery-options" role="radiogroup" aria-label="Delivery method">
+                            <label class="delivery-option is-selected" data-delivery-option>
+                                <input type="radio" name="{{ form.order_type.html_name }}" value="pickup" checked data-delivery-choice>
+                                <span class="delivery-option-icon">⌂</span><span><strong>Pickup</strong><small>Collect your order from our store</small></span>
+                            </label>
+                            <label class="delivery-option" data-delivery-option>
+                                <input type="radio" name="{{ form.order_type.html_name }}" value="deliver" data-delivery-choice>
+                                <span class="delivery-option-icon">⌁</span><span><strong>Delivery</strong><small>Deliver straight to your address</small></span>
+                            </label>
+
+                            {% if form.order_type.errors %}<div class="field-errors">{{ form.order_type.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="delivery-form" data-delivery-form="pickup">
+                            <div class="pickup-store-card">
+                                <div><span>Veyra Store</span><strong>47 Mametova Street, Almaty</strong></div>
+                                <div><span>Working hours</span><strong>Daily, 10:00–22:00</strong></div>
+                            </div>
+                            <label class="pickup-comment-label"><span>Comment for pickup</span><small>Optional</small><textarea name="{{ form.comments.html_name }}" rows="3" placeholder="Add a comment to your order" data-delivery-field></textarea></label>
+                            {% if form.comments.errors %}<div class="field-errors">{{ form.comments.errors }}</div>{% endif %}
+                        </div>
+                        <div class="delivery-form" data-delivery-form="deliver" hidden>
+                            <div class="checkout-fields two-columns">
+                                <label>City<input type="text" name="{{ form.city.html_name }}" placeholder="Almaty" data-delivery-required data-delivery-field></label>
+                                {% if form.city.errors %}<div class="field-errors">{{ form.city.errors }}</div>{% endif %}
+
+                                <label>Postal code<input type="text" name="{{ form.postal_code.html_name }}" placeholder="050000" data-delivery-required data-delivery-field></label>
+                                {% if form.postal_code.errors %}<div class="field-errors">{{ form.postal_code.errors }}</div>{% endif %}
+                            </div>
+                            <label>Street address<input type="text" name="{{ form.address.html_name }}" placeholder="Street, building, apartment" data-delivery-required data-delivery-field></label>
+                            {% if form.address.errors %}<div class="field-errors">{{ form.address.errors }}</div>{% endif %}
+
+                            <label>Comment for courier <em>Optional</em><textarea name="{{ form.comments.html_name }}" rows="3" placeholder="Floor, door code, or delivery instructions" data-delivery-field></textarea></label>
+                            {% if form.comments.errors %}<div class="field-errors">{{ form.comments.errors }}</div>{% endif %}
+                        </div>
+                        <div class="checkout-actions"><button class="checkout-back" type="button" data-previous-step>Back</button><button class="checkout-next" type="button" data-next-step>Continue</button></div>
+                    </section>
+
+                    <section class="checkout-panel" data-step-panel="3" hidden>
+                        <div class="panel-intro"><h2>Confirm order</h2><p>Review your information before continuing to payment.</p></div>
+                        <div class="confirmation-list">
+                            <div><span>Contact</span><strong data-confirm-contact>—</strong></div>
+                            <div><span>Delivery</span><strong data-confirm-delivery>Pickup</strong></div>
+                            <div><span>Delivery time</span><strong data-confirm-method>—</strong></div>
+                        </div>
+                        <fieldset class="payment-options">
+                            <legend>Payment method</legend>
+                            <p>Choose how you would like to pay.</p>
+                            <label class="payment-option is-selected" data-payment-option>
+                                <input type="radio" name="payment_method" value="kaspi" checked>
+                                <span class="payment-radio" aria-hidden="true"></span>
+                                <span class="payment-copy"><strong>Kaspi Pay</strong><small>Pay securely in the Kaspi.kz app</small></span>
+                                <span class="kaspi-mark">Kaspi.kz</span>
+                            </label>
+                            <label class="payment-option" data-payment-option>
+                                <input type="radio" name="payment_method" value="stripe">
+                                <span class="payment-radio" aria-hidden="true"></span>
+                                <span class="payment-copy"><strong>Bank card</strong><small>Visa, Mastercard and other cards</small></span>
+                                <span class="stripe-mark">stripe</span>
+                            </label>
+                        </fieldset>
+                        <label class="agreement"><input type="checkbox" data-agreement><span>I agree to the terms of service and privacy policy.</span></label>
+                        <div class="checkout-actions"><button class="checkout-back" type="button" data-previous-step>Back</button><button class="checkout-pay" type="submit" disabled data-pay-button>Continue to payment</button></div>
+                    </section>
+                </form>
+            </section>
+
+            <aside class="checkout-summary" aria-label="Order summary">
+                <p class="section-kicker">Order summary</p><h2>Your bag</h2>
+                {% for item in cart %}
+                    {% with product=item.product %}
+                        <div class="summary-item"><div class="summary-image">V</div><div><strong>Oversized Hoodie</strong><span>{{ product.product.color }} / Size {{ product.size }} · ×{{ item.quantity }}</span></div><b>${{ item.total_price }}</b></div>
+                    {% endwith %}
+                {% endfor %}
+                  <dl class="summary-totals"><div><dt>Subtotal</dt><dd>${{ subtotal }}</dd></div><div><dt>Delivery</dt><dd data-summary-delivery>Free</dd></div><div class="summary-total"><dt>Total</dt><dd data-summary-total>${{ total }}</dd></div></dl>
+                        <p class="summary-footnote">Final payment and order creation will be connected to the backend later.</p>
+            </aside>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const checkout = document.querySelector('[data-checkout]');
+        if (!checkout) return;
+        const panels = checkout.querySelectorAll('[data-step-panel]');
+        const indicators = checkout.querySelectorAll('[data-step-indicator]');
+        const options = checkout.querySelectorAll('[data-delivery-option]');
+        const deliveryForms = checkout.querySelectorAll('[data-delivery-form]');
+        const paymentOptions = checkout.querySelectorAll('[data-payment-option]');
+        const agreement = checkout.querySelector('[data-agreement]');
+        const payButton = checkout.querySelector('[data-pay-button]');
+        let step = 1;
+
+        function showStep(nextStep) {
+            step = nextStep;
+            panels.forEach(function (panel) { const active = Number(panel.dataset.stepPanel) === step; panel.hidden = !active; });
+            indicators.forEach(function (item) { const itemStep = Number(item.dataset.stepIndicator); item.classList.toggle('is-active', itemStep === step); item.classList.toggle('is-complete', itemStep < step); });
+            if (step === 3) updateConfirmation();
+        }
+
+        function updateConfirmation() {
+            const firstName = checkout.querySelector('[name="first_name"]').value || 'Your details';
+            const lastName = checkout.querySelector('[name="last_name"]').value;
+            const email = checkout.querySelector('[name="email"]').value;
+            const method = checkout.querySelector('[data-delivery-choice]:checked').value;
+            const slot = method === 'pickup' ? 'Daily, 10:00–22:00' : 'Courier delivery';
+            checkout.querySelector('[data-confirm-contact]').textContent = [firstName, lastName, email].filter(Boolean).join(' · ');
+            checkout.querySelector('[data-confirm-delivery]').textContent = method === 'pickup' ? 'Pickup at Veyra Store' : 'Delivery to your address';
+            checkout.querySelector('[data-confirm-method]').textContent = slot;
+        }
+
+        checkout.querySelectorAll('[data-next-step]').forEach(function (button) { button.addEventListener('click', function () {
+            if (step === 1 || step === 2) {
+                const selector = step === 1 ? '[data-step-panel="1"] [required]' : '[data-delivery-form="deliver"] [data-delivery-required]';
+                const deliverySelected = checkout.querySelector('[data-delivery-choice]:checked').value === 'deliver';
+                const invalid = Array.from(checkout.querySelectorAll(selector)).find(function (field) { return step === 2 && !deliverySelected ? false : !field.value.trim(); });
+                if (invalid) { invalid.focus(); invalid.reportValidity(); return; }
+            }
+            showStep(Math.min(3, step + 1));
+        }); });
+        checkout.querySelectorAll('[data-previous-step]').forEach(function (button) { button.addEventListener('click', function () { showStep(Math.max(1, step - 1)); }); });
+        function setDeliveryMethod(method) {
+            deliveryForms.forEach(function (form) {
+                const active = form.dataset.deliveryForm === method;
+                form.hidden = !active;
+                form.querySelectorAll('[data-delivery-field]').forEach(function (field) {
+                    field.disabled = !active;
+                });
+            });
+            checkout.querySelector('[data-summary-delivery]').textContent = method === 'pickup' ? 'Free' : '$10.00';
+            checkout.querySelector('[data-summary-total]').textContent = method === 'pickup' ? '$89.00' : '$99.00';
+        }
+
+        options.forEach(function (option) { option.addEventListener('click', function () {
+            const input = option.querySelector('input'); input.checked = true;
+            options.forEach(function (item) { item.classList.toggle('is-selected', item === option); });
+            setDeliveryMethod(input.value);
+        }); });
+        setDeliveryMethod(checkout.querySelector('[data-delivery-choice]:checked').value);
+        paymentOptions.forEach(function (option) { option.addEventListener('click', function () {
+            const input = option.querySelector('input');
+            input.checked = true;
+            paymentOptions.forEach(function (item) { item.classList.toggle('is-selected', item === option); });
+        }); });
+        agreement.addEventListener('change', function () { payButton.disabled = !agreement.checked; });
+    }());
+</script>
+{% endblock %}

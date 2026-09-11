@@ -71,7 +71,10 @@
                         {% endif %}
                     </div>
 
-                    <form class="product-buy-form" action="{% url 'cart:add' %}" method="post">
+                    <form class="product-buy-form" action="{% url 'cart:add' %}" method="post"
+                        hx-post="{% url 'cart:add' %}"
+                        hx-target="#budge"
+                    >
                         {% csrf_token %}
                         <input type="hidden" name="variant_id" value="{{ first_variant.id }}" data-selected-variant>
                         <div class="product-variant-data" hidden>
@@ -140,7 +143,9 @@
 
                         <div class="product-actions">
                             {% if user.is_authenticated %}
-                                <button type="submit" class="product-add-button">Add to cart</button>
+                                <button type="submit" class="product-add-button"
+
+                                >Add to cart</button>
                             {% else %}
                                 <a class="product-add-button" href="{% url 'users:login' %}?next={{ request.path }}">Add to cart</a>
                             {% endif %}
