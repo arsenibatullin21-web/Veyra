@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.id }} - Veyra{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-detail-page { min-height: 100vh; padding: 44px 0 80px; background: #f7f5f0; }
+    .order-detail-shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+    .back-link { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: .88rem; font-weight: 800; text-decoration: none; }.back-link:hover { color: var(--ink); }
+    .order-detail-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin: 20px 0 28px; }.order-detail-head h1 { margin: 0; color: var(--ink); font-size: clamp(2.2rem, 5vw, 4rem); line-height: .98; }.order-detail-head p { margin: 10px 0 0; color: var(--muted); }
+    .detail-status { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 8px 12px; color: #155eef; background: #eff4ff; font-size: .78rem; font-weight: 850; }.detail-status::before { width: 7px; height: 7px; border-radius: 50%; background: currentColor; content: ''; }
+    .detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 18px; align-items: start; }.detail-card { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: 0 16px 36px rgba(17,24,39,.05); }.detail-card h2 { margin: 0; font-size: 1.1rem; }.detail-card-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 20px; border-bottom: 1px solid var(--line); }.detail-card-head span { color: var(--muted); font-size: .82rem; font-weight: 700; }
+    .detail-items { display: grid; gap: 16px; padding: 20px; }.detail-item { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; align-items: center; gap: 14px; }.detail-image { width: 76px; aspect-ratio: 1; overflow: hidden; border-radius: 7px; background: var(--accent-soft); }.detail-image img { width: 100%; height: 100%; display: block; object-fit: cover; }.detail-item strong, .detail-item span { display: block; }.detail-item strong { color: var(--ink); font-size: .94rem; }.detail-item span { margin-top: 5px; color: var(--muted); font-size: .8rem; }.detail-item-price { text-align: right; }.detail-item-price b { font-size: .92rem; }.detail-item-price small { display: block; margin-top: 4px; color: var(--muted); font-size: .76rem; }
+    .detail-info { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }.info-card { padding: 20px; }.info-card h2 { margin-bottom: 16px; }.info-row + .info-row { margin-top: 14px; }.info-row span, .info-row strong { display: block; }.info-row span { color: var(--muted); font-size: .75rem; font-weight: 750; text-transform: uppercase; letter-spacing: .04em; }.info-row strong { margin-top: 4px; color: var(--ink); font-size: .88rem; line-height: 1.45; }
+    .summary-card { position: sticky; top: 94px; padding: 22px; }.summary-card h2 { margin-bottom: 20px; }.summary-row { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; color: var(--muted); font-size: .88rem; }.summary-row strong { color: var(--ink); }.summary-total { margin-top: 8px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--ink); font-size: 1.08rem; font-weight: 900; }.payment-note { margin-top: 18px; border: 1px solid #dce6f7; border-radius: 7px; padding: 14px; color: #475467; background: #f8fbff; font-size: .82rem; line-height: 1.45; }.payment-note strong { display: block; margin-bottom: 4px; color: var(--ink); }
+    @media (max-width: 860px) { .detail-layout { grid-template-columns: 1fr; }.summary-card { position: static; }.detail-info { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) { .order-detail-page { padding-top: 28px; }.order-detail-head { align-items: flex-start; flex-direction: column; }.detail-item { grid-template-columns: 60px minmax(0, 1fr); }.detail-image { width: 60px; }.detail-item-price { grid-column: 2; text-align: left; }.detail-card-head { align-items: flex-start; flex-direction: column; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="order-detail-page"><section class="order-detail-shell">
+    <a class="back-link" href="{% url 'orders:my_orders' %}">← Back to my orders</a>
+    <header class="order-detail-head"><div><p class="section-kicker">Order details</p><h1>Order #{{ order.id }}</h1><p>Placed {{ order.created_at|date:"F j, Y" }} · {{ order.created_at|date:"H:i" }}</p></div><span class="detail-status">{{ order.get_status_display }}</span></header>
+
+    <div class="detail-layout"><div>
+        <section class="detail-card"><div class="detail-card-head"><h2>Items in your order</h2><span>{{ order.items.count }} item{{ order.items.count|pluralize }}</span></div><div class="detail-items">
+            {% for item in order.items.all %}
+            <article class="detail-item"><div class="detail-image"><img src="{{ item.product_variant.main_image.url }}" alt="{{ item.product_variant.product.name }}"></div><div><strong>{{ item.product_variant.product.name }}</strong><span>Size {{ item.product_variant.size }} · Quantity {{ item.quantity }}</span></div><div class="detail-item-price"><b>${{ item.get_cost }}</b><small>${{ item.price }} each</small></div></article>
+            {% endfor %}
+        </div></section>
+
+        <div class="detail-info"><section class="detail-card info-card"><h2>Delivery</h2><div class="info-row"><span>Method</span><strong>{{ order.get_order_type_display }}</strong></div><div class="info-row"><span>Address</span><strong>{% if order.order_type == 'pickup' %}Veyra Store<br>47 Mametova Street, Almaty{% else %}{{ order.address }}<br>{{ order.city }}{% if order.postal_code %}, {{ order.postal_code }}{% endif %}{% endif %}</strong></div>{% if order.comments %}<div class="info-row"><span>Comment</span><strong>{{ order.comments }}</strong></div>{% endif %}</section>
+        <section class="detail-card info-card"><h2>Contact details</h2><div class="info-row"><span>Name</span><strong>{{ order.first_name }} {{ order.last_name }}</strong></div><div class="info-row"><span>Email</span><strong>{{ order.email }}</strong></div><div class="info-row"><span>Phone</span><strong>{{ order.phone }}</strong></div></section></div>
+    </div>
+    <aside class="detail-card summary-card"><h2>Payment summary</h2><div class="summary-row"><span>Payment status</span><strong>{{ order.get_payment_status_display }}</strong></div><div class="summary-row"><span>Items total</span><strong>${{ order.get_total_cost }}</strong></div><div class="summary-row summary-total"><span>Total</span><strong>${{ order.get_total_cost }}</strong></div><div class="payment-note"><strong>Order received</strong>We will notify you when your order status changes.</div></aside>
+    </div>
+</section></main>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}My orders - Veyra{% endblock %}
+
+{% block extra_css %}
+<style>
+    .orders-page { min-height: 100vh; padding: 44px 0 80px; background: #f7f5f0; }
+    .orders-shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+    .orders-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+    .orders-head h1 { margin: 0; color: var(--ink); font-size: clamp(2.5rem, 6vw, 4.8rem); line-height: .95; }
+    .orders-head p:not(.section-kicker) { max-width: 520px; margin: 12px 0 0; color: var(--muted); }
+    .orders-shop-link, .order-action { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: var(--radius); padding: 0 16px; color: var(--ink); background: #fff; font: inherit; font-weight: 850; text-decoration: none; }
+    .orders-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 18px; align-items: start; }
+    .orders-list, .orders-sidebar { border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: 0 16px 36px rgba(17,24,39,.05); }
+    .orders-list { padding: 18px; }.orders-list-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 2px 18px; border-bottom: 1px solid var(--line); }.orders-list-head h2 { margin: 0; font-size: 1.2rem; }.orders-list-head span { color: var(--muted); font-size: .86rem; font-weight: 750; }
+    .order-card { margin-top: 14px; overflow: hidden; border: 1px solid #e7ebf0; border-radius: var(--radius); background: #fbfcfd; }.order-card-head { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 12px; align-items: center; padding: 16px 18px; border-bottom: 1px solid #e7ebf0; background: #fff; }.order-number, .order-date { display: block; }.order-number { color: var(--ink); font-size: .98rem; font-weight: 900; }.order-date { margin-top: 3px; color: var(--muted); font-size: .8rem; }
+    .order-status { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 10px; font-size: .74rem; font-weight: 850; }.order-status::before { width: 6px; height: 6px; border-radius: 50%; background: currentColor; content: ''; }.order-status.processing { color: #155eef; background: #eff4ff; }.order-status.delivered { color: #087443; background: #ecfdf3; }.order-status.cancelled { color: #b42318; background: #fff1f1; }.order-status.delivery-type { border: 1px solid #d9e2ef; border-radius: 6px; padding: 6px 9px; color: #475467; background: #f8fafc; text-transform: capitalize; }.order-status.delivery-type::before { display: none; }.order-total { text-align: right; }.order-total span, .order-total strong { display: block; }.order-total span { color: var(--muted); font-size: .76rem; font-weight: 750; }.order-total strong { margin-top: 2px; font-size: 1rem; }
+    .order-products { display: grid; gap: 12px; padding: 16px 18px; }.order-product { display: grid; grid-template-columns: 56px minmax(0,1fr) auto; align-items: center; gap: 12px; }.product-thumb { width: 56px; aspect-ratio: 1; overflow: hidden; border-radius: 6px; background: var(--accent-soft); }.product-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }.order-product strong, .order-product span { display: block; }.order-product strong { font-size: .9rem; }.order-product span { margin-top: 3px; color: var(--muted); font-size: .78rem; }.order-product b { font-size: .87rem; }.order-card-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-top: 1px solid #e7ebf0; background: #fff; }.order-card-footer span { color: var(--muted); font-size: .8rem; font-weight: 700; }.order-action { min-height: 36px; padding: 0 12px; font-size: .8rem; }
+    .orders-sidebar { position: sticky; top: 94px; padding: 20px; }.orders-sidebar h2 { margin: 0; font-size: 1.05rem; }.orders-sidebar p { margin: 7px 0 0; color: var(--muted); font-size: .86rem; }.orders-sidebar a { display: block; margin-top: 16px; color: var(--accent); font-size: .86rem; font-weight: 850; }
+    @media (max-width: 850px) { .orders-layout { grid-template-columns: 1fr; }.orders-sidebar { position: static; }.orders-head { align-items: stretch; flex-direction: column; } }
+    @media (max-width: 600px) { .orders-page { padding-top: 28px; }.order-card-head { grid-template-columns: 1fr auto; }.order-total { grid-column: 1 / -1; text-align: left; }.order-card-footer { align-items: stretch; flex-direction: column; }.order-action { width: 100%; }.orders-list { padding: 12px; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="orders-page"><section class="orders-shell">
+    <div class="orders-head"><div><p class="section-kicker">{{ request.user.username }}</p><h1>My orders</h1><p>Track your purchases, delivery progress, and order details in one place.</p></div><a class="orders-shop-link" href="/products/catalog/">Continue shopping</a></div>
+    <div class="orders-layout"><section class="orders-list">
+        <div class="orders-list-head"><h2>Order history</h2><span>{{ orders.count }} orders</span></div>
+        {% for order in orders %}
+        <article class="order-card">
+            <div class="order-card-head">
+                <div>
+                    <strong class="order-number">Order #{{ order.id }}</strong>
+                    <span class="order-date">Placed {{ order.created_at|date:"F j, Y" }}</span>
+                </div>
+                <span class="order-status processing">{{ order.get_status_display }}</span>
+                <span class="order-status delivery-type">{{ order.get_order_type_display }}</span>
+                <div class="order-total"><span>Total</span><strong>${{ order.get_total_cost }}</strong>
+                </div>
+            </div>
+            <div class="order-products">
+                {% for item in order.items.all %}
+                <div class="order-product">
+                    <div class="product-thumb">
+                        <img src="{{ item.product_variant.main_image.url }}" alt="{{ item.product_variant.product.name }}">
+                    </div>
+                    <div><strong>{{ item.product_variant.product.name }}</strong><span>Size {{ item.product_variant.size }} · Quantity {{ item.quantity }}</span></div>
+                    <b>${{ item.price }}</b>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="order-card-footer"><span>Payment: {{ order.get_payment_status_display }}</span><a class="order-action" href="{% url 'orders:detail' order.id %}">View order</a></div>
+        </article>
+        {% endfor %}
+    </section>
+        <aside class="orders-sidebar"><h2>Need help?</h2><p>Questions about delivery, returns, or a specific order?</p><a href="#">Contact support</a></aside></div>
+</section></main>
+{% endblock %}

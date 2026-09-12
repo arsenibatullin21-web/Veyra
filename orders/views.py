@@ -3,6 +3,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import DetailView, ListView
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied as PermissionDeniedDrf
 
@@ -11,6 +12,7 @@ from orders.forms import OrderCreateForm
 from orders.models import OrderItem, Order
 from orders.serializers import OrderListSerializer, OrderDetailSerializer, UserOrderListSerializer, \
     UserOrderDetailSerializer, OrderItemSerializer, UserOrderItemSerializer
+from payment.models import PaymentAttempt
 from products.models import PromoCode
 from products.permissions import IsStaff
 
@@ -33,29 +35,43 @@ def create_order(request):
         form = OrderCreateForm(request.POST, request=request)
 
         if form.is_valid():
-            order = form.save()
+            items = []
+
 
             for item in cart:
                 product = item['product']
                 price = item['price']
                 quantity = item['quantity']
-
                 if promo_obj:
                     discount_amount = item['price'] * Decimal(promo_obj.discount) / Decimal("100")
                     price = (item['price'] - discount_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-                OrderItem.objects.create(
-                    order=order,
-                    product_variant=product,
-                    price=price,
-                    quantity=quantity
-                )
+                items.append({
+                    'product_variant_id': str(product.id),
+                    'price': str(price),
+                    'quantity': int(quantity)
+                })
 
-                cart.clear_items()
-                request.session['order_id'] = order.id
-                return redirect('cart:detail')
 
-            return render(request, 'orders/checkout.html', {
+            payment_attempt = PaymentAttempt.objects.create(
+                user=request.user,
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name'],
+                email=form.cleaned_data['email'],
+                phone=form.cleaned_data['phone'],
+                address=form.cleaned_data['address'],
+                city=form.cleaned_data['city'],
+                postal_code=form.cleaned_data['postal_code'],
+                total_price=total,
+                comments=form.cleaned_data['comments'],
+                order_type=form.cleaned_data['order_type'],
+                items=items
+            )
+
+            request.session['payment_token'] = str(payment_attempt.token)
+            return redirect('payment:process')
+
+        return render(request, 'orders/checkout.html', {
                 'form': form,
                 'total': total,
                 'subtotal': subtotal,
@@ -63,6 +79,32 @@ def create_order(request):
             })
     form = OrderCreateForm(request=request)
     return render(request, 'orders/checkout.html', {'form': form, 'total': total, 'subtotal': subtotal, 'cart': cart})
+
+
+class MyOrderListView(LoginRequiredMixin, ListView):
+    model = Order
+    template_name = "orders/my_orders.html"
+    context_object_name = "orders"
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
+
+
+class MyOrderDetailView(LoginRequiredMixin, DetailView):
+    model = Order
+    template_name = "orders/order_detail.html"
+    context_object_name = "order"
+    pk_url_kwarg = "order_id"
+
+    def get_queryset(self):
+        return (
+            Order.objects.filter(user=self.request.user)
+            .select_related("user")
+            .prefetch_related(
+                "items__product_variant__product",
+                "items__product_variant__size",
+            )
+        )
 
 
 class OrderListAPIView(generics.ListAPIView):
