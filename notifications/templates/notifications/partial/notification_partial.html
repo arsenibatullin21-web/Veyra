@@ -1,0 +1,69 @@
+<section class="notifications-shell">
+    <header class="notifications-head">
+        <div>
+            <p class="section-kicker">Your account</p>
+            <h1>Notifications</h1>
+            <p>Order updates, delivery progress, and account activity in one place.</p>
+        </div>
+        <form action="{% url 'notifications:read_all' %}" method="post"
+              hx-post="{% url 'notifications:read_all' %}"
+              hx-target="#noti-shell"
+        >
+            {% csrf_token %}
+            <input type="hidden" name="filter_type" value="{{ filter_type }}">
+            <button class="mark-all-button" type="submit">Mark all as read</button>
+        </form>
+    </header>
+    <section class="notifications-card">
+            <div class="notification-toolbar">
+            <div class="filter-tabs">
+                <button
+                    class="filter-tab {% if filter_type == 'all' or not filter_type %}is-active{% endif %}"
+                    type="button"
+                    hx-get="{% url 'notifications:my' %}"
+                    hx-vals='{"filter_type": "all"}'
+                    hx-target="#noti-shell"
+                    hx-push-url="true"
+                >
+                    All
+                </button>
+                <button
+                    class="filter-tab {% if filter_type == 'unread' %}is-active{% endif %}"
+                    type="button"
+                    hx-get="{% url 'notifications:my' %}"
+                    hx-vals='{"filter_type": "unread"}'
+                    hx-target="#noti-shell"
+                    hx-push-url="true"
+                >
+                    Unread
+                </button>
+            </div>
+            <span class="unread-count"><strong data-unread-count>{{ unread.count }}</strong> unread</span>
+        </div>
+        <div class="notification-list" data-notification-list>
+            {% for notification in notifications %}
+            <article class="notification {% if not notification.is_read %}is-unread{% endif %}" data-notification>
+                <span class="notification-icon">✓</span>
+                <div class="notification-copy">
+                    <h2>{{ notification.title }}</h2>
+                    <p>{{ notification.message }}</p>
+                </div>
+                <time class="notification-time">{{ notification.created_at|timesince }} ago</time>
+                <form action="{% url 'notifications:read' notification.id %}" method="post"
+                    hx-post="{% url 'notifications:read' notification.id %}"
+                    hx-target="#noti-shell"
+                >
+                    {% csrf_token %}
+                    <input type="hidden" name="filter_type" value="{{ filter_type }}">
+                    <button class="mark-read" type="submit">Mark read</button>
+                </form>
+            </article>
+            {% endfor %}
+        </div>
+        <div class="empty-state {% if not notifications %}is-visible{% endif %}">
+            <h2>No notifications here</h2>
+            <p>You are all caught up.</p>
+        </div>
+    </section>
+</section>
+
