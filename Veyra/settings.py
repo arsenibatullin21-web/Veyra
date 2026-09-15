@@ -48,7 +48,8 @@ PROJECT_APPS = [
     'products.apps.ProductsConfig',
     'orders.apps.OrdersConfig',
     'cart.apps.CartConfig',
-    'payment.apps.PaymentConfig'
+    'payment.apps.PaymentConfig',
+    'notifications.apps.NotificationsConfig'
 ]
 
 THIRD_WAY_APPS = [
