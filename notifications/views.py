@@ -1,10 +1,17 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
+from rest_framework import generics, permissions
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from notifications.models import Notification
+from notifications.serializers import AdminNotificationListSerializer, MyNotificationListSerializer
+from products.permissions import IsStaff
 
 
 class MyNotificationsListView(LoginRequiredMixin, ListView):
@@ -65,3 +72,45 @@ def read_all_notifications(request):
         queryset = queryset.filter(is_read=False)
 
     return render(request, 'notifications/partial/notification_partial.html', {'unread': unread, 'notifications': queryset, 'filter_type': filter_type})
+
+
+class NotificationListAPIView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff and self.kwargs.get('user_id'):
+            user = get_object_or_404(get_user_model(), pk=self.kwargs.get('user_id'))
+            return Notification.objects.filter(user=user).order_by('-created_at')
+
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def get_serializer_class(self):
+        if self.request.user.is_staff:
+            return AdminNotificationListSerializer
+        return MyNotificationListSerializer
+
+class ReadNotificationApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, ]
+    def post(self, request, *args, **kwargs):
+        notification_id = kwargs.get('notification_id')
+        if notification_id:
+            queryset = Notification.objects.all()
+            if not request.user.is_staff:
+                queryset = queryset.filter(user=request.user)
+
+            notification = get_object_or_404(queryset, pk=notification_id)
+
+            if not notification.is_read:
+                notification.is_read = True
+                notification.save(update_fields=['is_read'])
+                return Response({
+                    'message': f'Notification #{notification.id} marked as read.'
+                })
+            return Response({
+                'message': f'Notification #{notification.id} is already read.'
+            })
+
+        Notification.objects.filter(user=self.request.user, is_read=False).update(is_read=True)
+        return Response({
+            'message': 'All notifications marked as read.'
+        })
