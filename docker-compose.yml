@@ -31,7 +31,26 @@ services:
     depends_on:
       - db
 
+  redis:
+    image: redis:7-alpine
+    container_name: 'Redis'
+    volumes:
+      - redis_data:/data
+
+  celery:
+    build: .
+    container_name: 'Celery'
+    command: celery -A Veyra worker --loglevel=info
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
+
 volumes:
   static:
   media:
   postgres_data:
+  redis_data:
