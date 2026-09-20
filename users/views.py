@@ -188,3 +188,4 @@ def logout_view(request):
             'error': 'Something went wrong.'
         }, status=HTTP_400_BAD_REQUEST)
 
+

@@ -67,7 +67,7 @@
             <div class="field-group">
                 <div class="field-label-row">
                     <label for="{{ form.password.id_for_label }}">Password</label>
-                    <a href="#" aria-disabled="true">Forgot password?</a>
+                    <a href="{% url 'users:password-reset' %}" aria-disabled="true">Forgot password?</a>
                 </div>
                 {{ form.password }}
                 {% for error in form.password.errors %}
