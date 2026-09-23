@@ -49,7 +49,8 @@ PROJECT_APPS = [
     'orders.apps.OrdersConfig',
     'cart.apps.CartConfig',
     'payment.apps.PaymentConfig',
-    'notifications.apps.NotificationsConfig'
+    'notifications.apps.NotificationsConfig',
+    'newsletter.apps.NewsletterConfig',
 ]
 
 THIRD_WAY_APPS = [

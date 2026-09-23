@@ -166,29 +166,15 @@ class UserRegisterAPIView(generics.CreateAPIView):
 
         if serializer.is_valid(raise_exception=True):
             user = serializer.save(is_active=False)
+            protocol = 'http' if self.request.is_secure() else 'http'
+            domain = self.request.get_host()
 
-
-            uidb64 = urlsafe_base64_encode(
-                force_bytes(user.id)
-            )
-
-            token = default_token_generator.make_token(user)
-
-            activation_link = request.build_absolute_uri(
-                reverse('users:activate', kwargs={'uidb64': uidb64, 'token': token})
-            )
-
-            send_mail(
-                subject='Activate your Veyra Account',
-                message=(
-                    f'Hello, {user.username}!\n\n'
-                    'Open this link to activate your account:\n'
-                    f'{activation_link}\n\n'
-                    'If you did not create this account, ignore this email.'
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False
+            transaction.on_commit(
+                lambda: send_activation_email.delay(
+                    user_id=user.pk,
+                    domain=domain,
+                    protocol=protocol
+                )
             )
 
 
@@ -248,6 +234,11 @@ class ChangePasswordAPIView(generics.UpdateAPIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
 
+            transaction.on_commit(
+                lambda: send_password_changed_email.delay(
+                    self.get_object().pk
+                )
+            )
             return Response({
                 "user": str(self.get_object().username),
                 "message": "Password was changed successfully."
