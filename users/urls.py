@@ -12,6 +12,7 @@ urlpatterns = [
     path('login/', views.UserLoginView.as_view(), name='login'),
     path('profile/', views.UserProfileView.as_view(), name='profile'),
     path('logout/', LogoutView.as_view(next_page='users:login'), name='logout'),
+    path('activate/<uidb64>/<token>/', views.ActivationView.as_view(), name='activate'),
 
     path('password-reset/', PasswordResetView.as_view(template_name='users/password_reset_form.html', success_url=reverse_lazy('users:password-reset-done'), email_template_name='users/password_reset_email.html'), name='password-reset'),
     path('password-reset/done/', PasswordResetDoneView.as_view(template_name='users/password_reset_done.html'), name='password-reset-done'),

@@ -78,7 +78,7 @@ class UserLoginForm(AuthenticationForm):
 
 class UserPasswordChangeForm(forms.Form):
     old_password = forms.CharField(required=True)
-    new_password1 = forms.CharField(required=True)
+    new_password1 = forms.CharField(required=True, validators=[validate_password])
     new_password2 = forms.CharField(required=True)
 
     def __init__(self, *args, **kwargs):
@@ -97,7 +97,7 @@ class UserPasswordChangeForm(forms.Form):
         if new_password1 != new_password2:
             raise forms.ValidationError('New passwords do not match.')
 
-        if old_password == new_password1:
+        if old_password and not old_password == new_password1:
             raise forms.ValidationError('Old and new password cant be similar.')
 
         return cleaned_data

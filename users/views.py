@@ -1,11 +1,17 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model, update_session_auth_hash, login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
-from django.shortcuts import redirect, render
-from django.template.context_processors import request
-from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
+from django.shortcuts import redirect, render, get_object_or_404
+from django.core.mail import send_mail
+from django.urls import reverse_lazy, reverse
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.views import View
 from django.views.generic import CreateView, DetailView, UpdateView
+from django.utils.encoding import force_bytes, force_str
 from rest_framework import generics, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -26,6 +32,71 @@ class UserRegisterView(CreateView):
 
     def get_success_url(self):
         return reverse_lazy('users:login')
+
+    def form_valid(self, form):
+        user = form.save(commit=False)
+
+        user.is_active = False
+        user.save()
+
+        uidb64 = urlsafe_base64_encode(
+            force_bytes(user.pk)
+        )
+        token = default_token_generator.make_token(
+            user
+        )
+
+        activation_link = self.request.build_absolute_uri(
+            reverse('users:activate', kwargs={'uidb64': uidb64, 'token': token})
+        )
+
+        send_mail(
+            subject='Activate your Veyra Account',
+            message=(
+                f'Hello, {user.username}!\n\n'
+                'Open this link to activate your account:\n'
+                f'{activation_link}\n\n'
+                'If you did not create this account, ignore this email.'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False
+        )
+
+        messages.success(
+            self.request,
+            'We sent an activation link to your email.'
+        )
+        return HttpResponseRedirect(
+            self.get_success_url()
+        )
+
+class ActivationView(View):
+    def get(self, request, uidb64, token):
+        try:
+            user_id = force_str(
+                urlsafe_base64_decode(
+                    uidb64
+                )
+            )
+
+            user = get_user_model().objects.get(pk=user_id)
+        except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
+            user = None
+
+        if user is not None and user.is_active == False and default_token_generator.check_token(user, token=token):
+            user.is_active = True
+            user.save(update_fields=['is_active'])
+            messages.success(request, 'Your account was activated successfully.')
+            return redirect('users:login')
+
+        messages.error(
+            request,
+            'This activation link is invalid or has already been used.'
+        )
+        return redirect('users:register')
+
+
 
 class UserLoginView(LoginView):
     model = get_user_model()
@@ -101,15 +172,36 @@ class UserRegisterAPIView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid(raise_exception=True):
-            user = serializer.save()
+            user = serializer.save(is_active=False)
 
-            refresh = RefreshToken.for_user(user)
+
+            uidb64 = urlsafe_base64_encode(
+                force_bytes(user.id)
+            )
+
+            token = default_token_generator.make_token(user)
+
+            activation_link = request.build_absolute_uri(
+                reverse('users:activate', kwargs={'uidb64': uidb64, 'token': token})
+            )
+
+            send_mail(
+                subject='Activate your Veyra Account',
+                message=(
+                    f'Hello, {user.username}!\n\n'
+                    'Open this link to activate your account:\n'
+                    f'{activation_link}\n\n'
+                    'If you did not create this account, ignore this email.'
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False
+            )
+
 
             return Response({
                 'user': UserProfileSerializer(user).data,
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'message': 'You registered in successfully.'
+                'message': 'We sent you activation link.'
             }, status=HTTP_201_CREATED)
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
