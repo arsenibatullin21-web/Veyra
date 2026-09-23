@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.generics import get_object_or_404
 
 from orders.models import Order, OrderItem
+from orders.tasks import send_created_order_email
 from payment.models import PaymentAttempt
 from products.models import ProductVariant
 
@@ -56,6 +57,11 @@ def payment_webhook(request):
                     comments=payment_attempt.comments,
                 )
 
+                transaction.on_commit(
+                    lambda: send_created_order_email.delay(
+                        payment_attempt.user.pk
+                    )
+                )
                 for item in payment_attempt.items:
                     product_variant = get_object_or_404(ProductVariant, pk=item['product_variant_id'])
 

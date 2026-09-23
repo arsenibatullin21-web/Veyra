@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
+from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.mail import send_mail
@@ -21,6 +22,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from users.forms import UserRegisterForm, UserLoginForm, UserProfileEditForm, UserPasswordChangeForm
 from users.serializers import UserRegisterSerializer, UserProfileSerializer, UserLoginSerializer, \
     UserProfileEditSerializer, ChangePasswordSerializer
+from users.tasks import send_activation_email, send_password_changed_email
 
 
 # Create your views here.
@@ -39,30 +41,16 @@ class UserRegisterView(CreateView):
         user.is_active = False
         user.save()
 
-        uidb64 = urlsafe_base64_encode(
-            force_bytes(user.pk)
-        )
-        token = default_token_generator.make_token(
-            user
-        )
+        protocol = 'https' if self.request.is_secure() else 'http'
+        domain = self.request.get_host()
 
-        activation_link = self.request.build_absolute_uri(
-            reverse('users:activate', kwargs={'uidb64': uidb64, 'token': token})
+        transaction.on_commit(
+            lambda: send_activation_email.delay(
+                user.pk,
+                domain,
+                protocol
+            )
         )
-
-        send_mail(
-            subject='Activate your Veyra Account',
-            message=(
-                f'Hello, {user.username}!\n\n'
-                'Open this link to activate your account:\n'
-                f'{activation_link}\n\n'
-                'If you did not create this account, ignore this email.'
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False
-        )
-
         messages.success(
             self.request,
             'We sent an activation link to your email.'
@@ -151,6 +139,11 @@ class UserProfileView(LoginRequiredMixin, DetailView):
             if form.is_valid():
                 request.user.set_password(form.cleaned_data.get('new_password1'))
                 request.user.save()
+                transaction.on_commit(
+                    lambda: send_password_changed_email.delay(
+                        self.request.user.pk,
+                    )
+                )
                 update_session_auth_hash(request, request.user)
                 return redirect('users:profile')
 
