@@ -7,6 +7,8 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from rest_framework import generics, mixins, permissions
 from rest_framework.exceptions import PermissionDenied as PermissionDeniedDrf
+
+from newsletter.forms import SubscribeNewsletterForm
 from products.forms import ProductCreateForm, ProductVariantCreateInlineFormSet, ProductImageCreateInlineFormSet, \
     ProductUpdateForm, ProductVariantUpdateInlineFormSet, ProductImageUpdateInlineFormset
 from products.models import Product, Category, ProductImage, ProductVariant, Size, Color, PromoCode
@@ -29,6 +31,7 @@ class HomePageView(ListView):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         context['categories'] = Category.objects.all()
+        context['subscribe_form'] = SubscribeNewsletterForm(self.request.POST or None)
         return context
 
 class CatalogFilterMixin:

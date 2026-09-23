@@ -262,8 +262,12 @@
                         Later this can connect to Celery and Redis: user subscribes, task sends email, Redis helps with background jobs.
                     </p>
                 </div>
-                <form class="newsletter-form" action="#" method="post">
+                <form class="newsletter-form" action="{% url 'newsletter:subscribe' %}" method="post">
+                    {% csrf_token %}
                     <input type="email" name="email" placeholder="Email address" aria-label="Email address">
+                    {% if subscribe_form.email.error %}
+                        <p>{{ subscribe_form.email.error.0 }}</p>
+                    {% endif %}
                     <button type="submit">Notify me</button>
                 </form>
             </div>
