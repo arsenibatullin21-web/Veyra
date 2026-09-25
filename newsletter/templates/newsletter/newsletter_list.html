@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Newsletters - Veyra{% endblock %}
+
+{% block extra_css %}
+<style>
+    .newsletter-archive { min-height: 70vh; padding: 56px 0 88px; background: #f7f5f0; }
+    .newsletter-archive__inner { width: min(920px, calc(100% - 32px)); margin: 0 auto; }
+    .newsletter-archive__eyebrow { margin: 0 0 10px; color: var(--accent); font-size: .78rem; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+    .newsletter-archive h1 { margin: 0; color: var(--ink); font-size: clamp(2.4rem, 6vw, 4.8rem); line-height: .95; }
+    .newsletter-archive__intro { max-width: 550px; margin: 18px 0 38px; color: var(--muted); line-height: 1.65; }
+    .newsletter-list { display: grid; gap: 14px; }
+    .newsletter-card { padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: 0 12px 28px rgba(17, 24, 39, .04); }
+    .newsletter-card__date { display: block; margin-bottom: 10px; color: var(--accent); font-size: .75rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+    .newsletter-card__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .newsletter-card__top .newsletter-card__date { margin: 0; }
+    .newsletter-status { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 10px; font-size: .7rem; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+    .newsletter-status--sent { color: #087a62; background: #dff7ed; }
+    .newsletter-status--ready { color: #9b6100; background: #fff0cd; }
+    .newsletter-status--draft { color: #59677b; background: #edf1f6; }
+    .newsletter-card h2 { margin: 0 0 12px; color: var(--ink); font-size: 1.25rem; }
+    .newsletter-card__body { margin: 0; color: var(--muted); line-height: 1.7; white-space: pre-line; }
+    .newsletter-empty { padding: 60px 24px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; text-align: center; }
+    .newsletter-empty h2 { margin: 0; color: var(--ink); font-size: 1.1rem; }
+    .newsletter-empty p { margin: 10px 0 0; color: var(--muted); }
+    .newsletter-pagination { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 30px; }
+    .newsletter-pagination a { color: var(--ink); font-size: .85rem; font-weight: 850; text-decoration: none; }
+    .newsletter-pagination span { color: var(--muted); font-size: .82rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="newsletter-archive">
+    <section class="newsletter-archive__inner">
+        <p class="newsletter-archive__eyebrow">Admin panel</p>
+        <h1>Newsletters</h1>
+        <p class="newsletter-archive__intro">
+            Manage and review every newsletter: drafts, ready-to-send issues, and sent emails.
+        </p>
+
+        {% if newsletters %}
+            <div class="newsletter-list">
+                {% for newsletter in newsletters %}
+                    <article class="newsletter-card">
+                        <div class="newsletter-card__top">
+                            <time class="newsletter-card__date" datetime="{{ newsletter.created_at|date:'c' }}">
+                                Created {{ newsletter.created_at|date:'F j, Y' }}
+                            </time>
+                            {% if newsletter.sent_at %}
+                                <span class="newsletter-status newsletter-status--sent">Sent</span>
+                            {% elif newsletter.is_ready_to_send %}
+                                <span class="newsletter-status newsletter-status--ready">Ready</span>
+                            {% else %}
+                                <span class="newsletter-status newsletter-status--draft">Draft</span>
+                            {% endif %}
+                        </div>
+                        <h2>{{ newsletter.subject }}</h2>
+                        <p class="newsletter-card__body">{{ newsletter.body }}</p>
+                        {% if newsletter.is_ready_to_send and not newsletter.sent_at %}
+                        <form action="{% url 'newsletter:send' newsletter.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit">Send</button>
+                        </form>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+
+            {% if is_paginated %}
+                <nav class="newsletter-pagination" aria-label="Newsletter pages">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    {% endif %}
+
+                    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        {% else %}
+            <section class="newsletter-empty">
+                <h2>No newsletters yet</h2>
+                <p>Create the first newsletter to see it here.</p>
+            </section>
+        {% endif %}
+    </section>
+</main>
+{% endblock %}
