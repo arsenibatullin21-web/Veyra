@@ -11,12 +11,12 @@ from newsletter.models import NewsletterSubscriber, Newsletter, NewsletterDelive
 
 
 @shared_task(retry_backoff=True, max_retries=3, autoretry_for=(SMTPException, ))
-def send_subscribed_newsletter_email(subscribe_id, domain, protocol):
+def send_subscribed_newsletter_email(subscribe_id):
     '''Email message user receives after subscribing to the Veyra newsletter'''
     subscriber = NewsletterSubscriber.objects.get(pk=subscribe_id)
 
     unsubscribe_link = (
-        f'{protocol}://{domain}'
+        settings.SITE_URL
         + reverse('newsletter:unsubscribe', kwargs={'token': subscriber.token})
     )
     send_mail(
@@ -82,3 +82,10 @@ def send_newsletter_email(newsletter_id, domain, protocol):
     newsletter.sent_at = timezone.now()
     newsletter.is_ready_to_send = False
     newsletter.save()
+
+@shared_task(retry_backoff=True, max_retries=3, autoretry_for=(SMTPException, ))
+def send_scheduled_newsletter_email():
+    newsletters = Newsletter.objects.filter(is_ready_to_send=True, sent_at__isnull=True)
+
+    for newsletter in newsletters:
+        send_newsletter_email.delay(newsletter.pk)

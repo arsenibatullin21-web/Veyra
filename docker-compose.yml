@@ -49,6 +49,18 @@ services:
       - redis
       - db
 
+  celery-beat:
+    build: .
+    container_name: 'Celery Beat'
+    env_file:
+      - .env
+    command: celery -A Veyra beat --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
+
 volumes:
   static:
   media:

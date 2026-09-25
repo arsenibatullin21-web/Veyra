@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 
 import stripe
+from celery.schedules import crontab
 from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,7 +31,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+SITE_URL = 'http://localhost:8000'
 
 # Application definition
 
@@ -167,6 +168,17 @@ STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
 
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
+
+CELERY_BEAT_SCHEDULED = {
+    'sent-ready-newsletters-every-monday': {
+        'task': 'send_scheduled_newsletter_email',
+        'schedule': crontab(
+            day_of_week='monday',
+            hour=10,
+            minute=0
+        ),
+    },
+}
 
 # Email (Yandex SMTP over SSL)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
