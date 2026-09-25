@@ -8,6 +8,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.generics import get_object_or_404
 
+from notifications.models import Notification
 from orders.models import Order, OrderItem
 from orders.tasks import send_created_order_email
 from payment.models import PaymentAttempt
@@ -77,6 +78,12 @@ def payment_webhook(request):
 
                 payment_attempt.order = order
                 payment_attempt.save(update_fields=['order'])
+                Notification.objects.create(
+                    user=payment_attempt.user,
+                    title='New Order',
+                    type=Notification.NotificationType.ORDER_CREATED,
+                    message='Your order was created successfully.'
+                )
             return HttpResponse(200)
     return HttpResponse(status=200)
 
